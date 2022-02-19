@@ -38,9 +38,18 @@ export default {
   methods: {
     saveConfiguration: function () {
       const data = {
-        repos: this.repos,
+        repos: this.repos.map((repo) => {
+            return {
+              authors: repo.authors,
+              commits: repo.commits,
+              ignoredFiles: repo.ignoredFiles,
+              lines: repo.lines,
+              path: repo.path,
+            };
+          }),
         date: this.date,
       };
+
       var serializedData = JSON.stringify(data);
 
       const blob = new Blob([serializedData], {
