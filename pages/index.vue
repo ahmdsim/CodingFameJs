@@ -58,8 +58,8 @@
             <v-row v-for="(item, index) in repos" :key="index">
               <v-col cols="9">
                 <v-text-field
-                  label="Repository"
                   v-model="item.path"
+                  label="Repository"
                   @input="item.path = normalize(item.path)"
                 />
               </v-col>
@@ -73,7 +73,9 @@
                   small
                   @click="removeRepository(index)"
                 >
-                  <v-icon dark> mdi-minus </v-icon>
+                  <v-icon dark>
+                    mdi-minus
+                  </v-icon>
                 </v-btn>
 
                 <v-btn
@@ -145,11 +147,11 @@
                 <v-card-title>Total</v-card-title>
                 <v-card-text>
                   {{ repos.reduce((a, b) => a + b.commits, 0) }} Commits
-                  <br />
+                  <br>
                   {{ repos.reduce((a, b) => a + b.lines.added, 0) }}
-                  Lines added <br />
+                  Lines added <br>
                   {{ repos.reduce((a, b) => a + b.lines.deleted, 0) }}
-                  Lines deleted <br />
+                  Lines deleted <br>
                 </v-card-text>
               </v-card>
             </div>
@@ -166,7 +168,9 @@
               >
                 <v-card-title>{{ author.email }}</v-card-title>
                 <v-card-text>
-                  <div class="commits-count">Commits: {{ author.commits }}</div>
+                  <div class="commits-count">
+                    Commits: {{ author.commits }}
+                  </div>
                   <div class="lines-of-code">
                     Lines of code: +{{ author.lines.added }} -{{
                       author.lines.deleted
@@ -195,39 +199,27 @@
     <v-divider />
     <v-row class="mt-5">
       <v-col cols="6">
-        <div v-for="(repo, index) in repos" :key="index">
-          <project-tree
-            v-if="repo.structure && repo.structure.length > 0"
-            :items="repo.structure"
-            :active-file.sync="fileSelected"
-            :open-file.sync="fileOpened"
-            :is-ignored-callback="isIgnored"
-            :stop-ignore-file-callback="stopIgnoreFile"
-            :ignore-file-callback="ignoreFile"
-          />
-          <v-divider v-if="repo.structure && repo.structure.length > 0" />
-        </div>
+        <v-card v-for="(repo, index) in repos" :key="index" class="mb-2" elevation="4">
+          <v-card-title><EditIgnores :ignored-files="repo.ignoredFiles" :repo="repo.path" @ignores="onChangeIgnores" /> {{ repo.path }} </v-card-title>
+          <v-card-text>
+            <project-tree
+              v-if="repo.structure && repo.structure.length > 0"
+              :items="repo.structure"
+              :active-file.sync="fileSelected"
+              :open-file.sync="fileOpened"
+              :is-ignored-callback="isIgnored"
+              :stop-ignore-file-callback="stopIgnoreFile"
+              :ignore-file-callback="ignoreFile"
+            />
+          </v-card-text>
+        </v-card>
       </v-col>
       <v-col cols="6">
         <v-card>
           <v-card-title>{{ selectedFileName }}</v-card-title>
           <v-card-text class="filePreview">
-            <pre
-              >{{ filePreview }}
+            <pre>{{ filePreview }}
             </pre>
-          </v-card-text>
-        </v-card>
-        <v-card
-          v-for="repository in repos"
-          :key="repository.path"
-          class="mb-2"
-          elevation="4"
-        >
-          <v-card-title>{{ repository.path }}</v-card-title>
-          <v-card-text>
-            <div class="commits-count">
-              <EditIgnores :ignored-files="repository.ignoredFiles" :repo="repository.path" @ignores="onChangeIgnores" />
-            </div>
           </v-card-text>
         </v-card>
       </v-col>

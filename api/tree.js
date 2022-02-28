@@ -46,7 +46,7 @@ export default async function (req, res, _) {
 
   const fg = require('fast-glob')
 
-  const repo = url.searchParams.get('repo');
+  const repo = url.searchParams.get('repo')
   const result = await fg([repo + '/**/*'], { dot: true })
   const output = parse(result, repo)
 

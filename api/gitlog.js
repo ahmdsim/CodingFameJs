@@ -110,7 +110,7 @@ export default function (req, res, _) {
   res.write(JSON.stringify(output))
   res.end()
 
-  function fileExcluded(filepath) {
+  function fileExcluded (filepath) {
     for (let i = 0; i < ignores.length; i++) {
       const ignorePattern = ignores[i]
       if (minimatch(filepath, ignorePattern, { matchBase: true })) {
