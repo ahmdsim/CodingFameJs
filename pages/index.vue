@@ -215,7 +215,7 @@
         </v-card>
       </v-col>
       <v-col cols="6">
-        <v-card>
+        <v-card class="sticky">
           <v-card-title>{{ selectedFileName }}</v-card-title>
           <v-card-text class="filePreview">
             <pre>{{ filePreview }}
@@ -541,5 +541,11 @@ export default {
 <style scoped>
 .filePreview {
   overflow: hidden;
+}
+
+.sticky {
+  position: -webkit-sticky; /* Safari */
+  position: sticky;
+  top: 5px;
 }
 </style>
