@@ -65,6 +65,7 @@
               </v-col>
               <v-col cols="3">
                 <v-btn
+                  v-if="index !== repos.length - 1"
                   class="mx-2"
                   fab
                   dark
