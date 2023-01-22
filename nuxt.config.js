@@ -26,9 +26,12 @@ export default {
 
   serverMiddleware: [
     { path: '/gitlog', handler: '~/api/gitlog.js' },
-    { path: '/contributors', handler: '~/api/contributors.js' },
     { path: '/file', handler: '~/api/file.js' },
-    { path: '/tree', handler: '~/api/tree.js' }
+    { path: '/tree', handler: '~/api/tree.js' },
+    { path: '/gitblame', handler: '~/api/gitblame.js' },
+    {path: '/extensions', handler: '~/api/extensions.js' },
+    {path: '/advancedgitblame', handler: '~/api/advancedgitblame.js' },
+    {path: '/survival', handler: '~/api/survival'}
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components

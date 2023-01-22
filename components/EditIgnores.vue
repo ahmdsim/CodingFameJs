@@ -1,16 +1,10 @@
 <template>
   <div>
-    <v-btn
-      color="primary"
-      class="mx-2"
-      fab
-      dark
-      small
-      @click.stop="openDialog"
-    >
-      <v-icon>
+    <v-btn color="primary" elevation="2" @click.stop="openDialog">
+      <v-icon left>
         mdi-pencil
       </v-icon>
+      Edit ignores
     </v-btn>
     <v-dialog v-model="dialog" max-width="500px">
       <v-card>
@@ -54,7 +48,7 @@ export default {
       this.dialog = false;
     },
     openDialog: function() {
-      this.files = this.ignoredFiles.join("\n")
+      this.files = this.ignoredFiles.join("\n");
       this.dialog = true;
     }
   },

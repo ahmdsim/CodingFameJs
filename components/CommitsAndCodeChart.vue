@@ -1,6 +1,5 @@
 <template>
   <div>
-    <h4>{{ repoName }}</h4>
     <GChart
       v-if="repo.length > 0"
       type="ColumnChart"
@@ -51,6 +50,7 @@ export default {
   },
   mounted() {
     this.createChartForDates();
+    this.$emit('stopSpiner');
   },
   methods: {
     getDatesBetween: function (startDate, endDate, includeEndDate = true) {
@@ -69,7 +69,7 @@ export default {
       const lines = {};
       this.repo.forEach((commit) => {
         var date = new Date(commit.date);
-        var dateKey = date.toISOString().substr(0, 10);
+        var dateKey = date.toISOString().substring(0, 10);
         commits[dateKey] = (commits[dateKey] ?? 0) + 1;
         lines[dateKey] =
           (lines[dateKey] ?? 0) +
@@ -83,7 +83,7 @@ export default {
       if (dates.length < 30) {
         for (let index = 0; index < dates.length; index++) {
           const date = dates[index];
-          const dateKey = date.toISOString().substr(0, 10);
+          const dateKey = date.toISOString().substring(0, 10);
           this.lineChartData.push([date, commits[dateKey], lines[dateKey]]);
         }
       } else {
@@ -94,7 +94,7 @@ export default {
         var linesInPeriod = 0;
         for (let i = 0; i < dates.length; i++) {
           var date = dates[i];
-          var dateKey = date.toISOString().substr(0, 10);
+          var dateKey = date.toISOString().substring(0, 10);
           commitsInPeriod += commits[dateKey] ?? 0;
           linesInPeriod += lines[dateKey] ?? 0;
           if (currentPeriod == period || dates.length == i + 1) {

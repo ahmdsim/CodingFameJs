@@ -9,6 +9,7 @@ export default function (req, res, _) {
   }
   let gitFilterParams = ''
   let ignores = []
+  const repo = url.searchParams.get('repo')
   if (url.searchParams.get('after') != null) {
     gitFilterParams += `--after=${url.searchParams.get('after')} `
   } else {
@@ -45,47 +46,69 @@ export default function (req, res, _) {
       deleted: 0
     },
     commits: 0,
-    files: []
   }
-  const files = []
+
   commits.forEach((commit) => {
     if (output.authors[commit.author.email] && output.authors[commit.author.email] != null) {
       if (commit.stat.length > 0) {
-        output.authors[commit.author.email].lines.added += commit.stat.reduce((p, n) => {
+        const added = commit.stat.reduce((p, n) => {
           if (fileExcluded(n.filepath)) {
             return p
           } else {
             return p + n.added
           }
         }, 0)
-        output.authors[commit.author.email].lines.deleted += commit.stat.reduce((p, n) => {
+        const deleted = commit.stat.reduce((p, n) => {
           if (fileExcluded(n.filepath)) {
             return p
           } else {
             return p + n.deleted
           }
         }, 0)
+
+        output.authors[commit.author.email].lines.added += added;
+        output.authors[commit.author.email].lines.deleted += deleted;
+
+        output.authors[commit.author.email].details.push([
+          commit.sha,
+          commit.date.toISOString().substring(0, 10),
+          [added, deleted],
+          commit.stat.filter((info) => !(fileExcluded(info["filepath"]))),
+          repo
+        ])
       }
       output.authors[commit.author.email].commits += 1
     } else {
+      const added = commit.stat.reduce((p, n) => {
+        if (fileExcluded(n.filepath)) {
+          return p
+        } else {
+          return p + n.added
+        }
+      }, 0)
+      const deleted = commit.stat.reduce((p, n) => {
+        if (fileExcluded(n.filepath)) {
+          return p
+        } else {
+          return p + n.deleted
+        }
+      }, 0)
+
       output.authors[commit.author.email] = {
         lines: {
-          added: commit.stat.reduce((p, n) => {
-            if (fileExcluded(n.filepath)) {
-              return p
-            } else {
-              return p + n.added
-            }
-          }, 0),
-          deleted: commit.stat.reduce((p, n) => {
-            if (fileExcluded(n.filepath)) {
-              return p
-            } else {
-              return p + n.deleted
-            }
-          }, 0)
+          added: added,
+          deleted: deleted
         },
-        commits: 1
+        commits: 1,
+        details: [
+          [
+            commit.sha,
+            commit.date.toISOString().substring(0, 10),
+            [added, deleted],
+            commit.stat.filter((info) => !(fileExcluded(info["filepath"]))),
+            repo
+          ]
+        ]
       }
     }
 
@@ -110,7 +133,7 @@ export default function (req, res, _) {
   res.write(JSON.stringify(output))
   res.end()
 
-  function fileExcluded (filepath) {
+  function fileExcluded(filepath) {
     for (let i = 0; i < ignores.length; i++) {
       const ignorePattern = ignores[i]
       if (minimatch(filepath, ignorePattern, { matchBase: true })) {
