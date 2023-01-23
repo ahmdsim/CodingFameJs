@@ -18,10 +18,6 @@ COPY package*.json ./
 
 FROM base as build
 
-# The version value below doesn't matter, we only need the environment 
-# variable defined so test processor would use jest-teamcity-reporter
-ENV TEAMCITY_VERSION 2020.1.2
-
 RUN npm install
 
 # copy the app, note .dockerignore
@@ -44,7 +40,7 @@ FROM base as production
 
 COPY package*.json ./ 
 
-RUN npm install --production
+RUN npm install
 
 # copy the app, note .dockerignore
 COPY --chown=node:node . .
@@ -68,9 +64,9 @@ COPY --from=build /home/node/app/static /home/node/app/static
 EXPOSE 5000
 
 # set app serving to permissive / assigned
-ENV NUXT_HOST=10.16.18.17
+ENV NUXT_HOST=0.0.0.0
 # set app port
 ENV NUXT_PORT=5000
 
 # start the app
-CMD [ "npm", "start" ]
+CMD [ "npm", "run", "dev" ]

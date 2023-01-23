@@ -326,7 +326,7 @@ export default {
   async mounted() {
     if (process.client) {
       this.isSpinerExtensions = true;
-      if (localStorage.getItem("hasData")) {
+      if (localStorage.getItem("hasData") == 1) {
         if (localStorage.getItem("date")) {
           this.date = JSON.parse(localStorage.getItem("date"));
         }
@@ -343,7 +343,7 @@ export default {
         //   this.rawData = JSON.parse(localStorage.getItem("rawData"));
         // }
       } else {
-        if (localStorage.getItem("repos")) {
+        if (localStorage.getItem("repos") && JSON.parse(localStorage.getItem("repos")).length > 0 ) {
           this.repos = JSON.parse(localStorage.getItem("repos"));
           this.analize();
         } else {
@@ -468,7 +468,7 @@ export default {
       analysis.title = this.date.join(' ')
       this.analyses.push(analysis)
 
-      if (this.repos.length > 0) {
+      if (this.repos.length > 0 && this.repos[0].path != "") {
         localStorage.repos = JSON.stringify(
           this.repos.map((repo) => {
             return {
