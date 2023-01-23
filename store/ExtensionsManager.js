@@ -19,6 +19,7 @@ export const state = () => ({
   pieDatas: [],
   mainPieData: [],
   personalImpact: [],
+  ignores: [],
 })
 
 export const getters = {
@@ -39,6 +40,8 @@ export const getters = {
 export const mutations = {
   updateRepoData (state, payload) {
     state.repopath = payload.repopath
+    state.ignores = payload.ignores
+
     let extractedFiles = payload.repotree.map((file) => (extractFiles(file))).reduce((p, c) => p.concat(c), []).map((file) => file.split('.').pop())
     let extensions = new Set(extractedFiles)
     state.extensions = Array.from(extensions)
@@ -84,28 +87,18 @@ export const mutations = {
 
 export const actions = {
   async reloadImpact({ state, commit }) {
-    let impact = {}
-    if (localStorage.getItem('impact')) {
-      let lsImpact = new Map(Object.entries(JSON.parse(localStorage.getItem('impact'))))
-      if (lsImpact.get(state.repopath)) {
-        impact = lsImpact.get(state.repopath)
-      } else {
-        console.log(lsImpact)
-        impact = await this.$axios.$get(
-          `/advancedgitblame?repopath=${escape(state.repopath)}`
-        )
-        lsImpact.set(state.repopath, impact)
-        console.log(lsImpact)
-        localStorage.setItem('impact', JSON.stringify(Object.fromEntries(lsImpact)))
-      } 
-    } else {
-      impact = await this.$axios.$get(
-        `/advancedgitblame?repopath=${escape(state.repopath)}`
-      )
-      let ls = new Map()
-      ls.set(state.repopath, impact)
-      localStorage.setItem('impact', JSON.stringify(Object.fromEntries(ls.entries())))
-    }
-    commit('setImpact', {impact: impact})
+    let impact = {analysis: {}}
+      var impactTimer = setInterval(() => {
+        this.$axios.$get(
+          `/advancedgitblame?repopath=${escape(state.repopath)}&ignores=${state.ignores.join(',')}`
+          ).then(function (data) {
+            impact = JSON.parse(data)
+            impact.analysis = JSON.parse(impact.analysis)
+            commit('setImpact', {impact: impact.analysis})
+            if (impact.progress && impact.progress == 100) {
+              clearInterval(impactTimer)
+        }
+      })
+    }, 10000) 
   }
 }

@@ -33,11 +33,6 @@ export default function (req, res, _) {
   const parsegit = require('parse-git-numstat')
   const commits = parsegit(gitlog)
 
-  if (url.searchParams.get('raw') != null) {
-    res.write(JSON.stringify(commits))
-    res.end()
-    return
-  }
   const output = {
     authors: {
     },
@@ -48,24 +43,30 @@ export default function (req, res, _) {
     commits: 0,
   }
 
+  let parsedCommits = []
+
   commits.forEach((commit) => {
+    let added = 0
+    let deleted = 0
+    if (commit.stat.length > 0) {
+      added = commit.stat.reduce((p, n) => {
+        if (fileExcluded(n.filepath)) {
+          return p
+        } else {
+          return p + n.added
+        }
+      }, 0)
+      deleted = commit.stat.reduce((p, n) => {
+        if (fileExcluded(n.filepath)) {
+          return p
+        } else {
+          return p + n.deleted
+        }
+      }, 0)
+    }
+    parsedCommits.push({date: commit.date, stat: [{added: added, deleted: deleted}]})
     if (output.authors[commit.author.email] && output.authors[commit.author.email] != null) {
       if (commit.stat.length > 0) {
-        const added = commit.stat.reduce((p, n) => {
-          if (fileExcluded(n.filepath)) {
-            return p
-          } else {
-            return p + n.added
-          }
-        }, 0)
-        const deleted = commit.stat.reduce((p, n) => {
-          if (fileExcluded(n.filepath)) {
-            return p
-          } else {
-            return p + n.deleted
-          }
-        }, 0)
-
         output.authors[commit.author.email].lines.added += added;
         output.authors[commit.author.email].lines.deleted += deleted;
 
@@ -79,21 +80,6 @@ export default function (req, res, _) {
       }
       output.authors[commit.author.email].commits += 1
     } else {
-      const added = commit.stat.reduce((p, n) => {
-        if (fileExcluded(n.filepath)) {
-          return p
-        } else {
-          return p + n.added
-        }
-      }, 0)
-      const deleted = commit.stat.reduce((p, n) => {
-        if (fileExcluded(n.filepath)) {
-          return p
-        } else {
-          return p + n.deleted
-        }
-      }, 0)
-
       output.authors[commit.author.email] = {
         lines: {
           added: added,
@@ -111,24 +97,16 @@ export default function (req, res, _) {
         ]
       }
     }
-
-    output.lines.added += commit.stat.reduce((p, n) => {
-      if (fileExcluded(n.filepath)) {
-        return p
-      } else {
-        return p + n.added
-      }
-    }, 0)
-
-    output.lines.deleted += commit.stat.reduce((p, n) => {
-      if (fileExcluded(n.filepath)) {
-        return p
-      } else {
-        return p + n.deleted
-      }
-    }, 0)
-    output.commits += 1
   })
+  output.commits = parsedCommits.length
+  output.lines.added = parsedCommits.reduce((p, n) => {return p + n.stat[0].added}, 0)
+  output.lines.deleted = parsedCommits.reduce((p, n) => {return p + n.stat[0].deleted}, 0)
+
+  if (url.searchParams.get('raw') != null) {
+    res.write(JSON.stringify(parsedCommits))
+    res.end()
+    return
+  }
 
   res.write(JSON.stringify(output))
   res.end()

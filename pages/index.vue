@@ -26,7 +26,6 @@
               @analize="analize"
               @changeTitle="changeAnalysisTitle"
               @isImpact="switchImpact"
-              @isPersistence="switchPersistence"
             />
           </div>
           <div class="mt-2">
@@ -76,12 +75,9 @@
                 >
                   {{ item }}
                 </v-tab>
-                <v-tab v-if="isImpact">
+                <V-tab v-if="isImpact">
                   Impact
-                </v-tab>
-                <v-tab v-if="isPersistence">
-                  Persistence of code
-                </v-tab>
+                </V-tab>
               </v-tabs>
             </template>
             <v-tabs-items v-model="tab">
@@ -117,6 +113,31 @@
                     :pieData="mainPieData"
                     @stopSpinerExtensions="isSpinerExtensions = false;"
                   />
+                  <template>
+                    <div>
+                      <v-alert
+                        v-model="alert"
+                        border="left"
+                        close-text="Close Alert"
+                        color="primary"
+                        dark
+                      >
+                        <v-row>
+                          <v-col cols="10">
+                            Are you sure you want to analize this repo without any ignored files? It may cause to unlimited calculations that will not end
+                          </v-col>
+                          <v-col cols="2">
+                            <v-btn @click="useExtensionsManager">
+                              Anyway analize
+                            </v-btn>
+                          </v-col>
+                        </v-row>
+                      </v-alert>
+                      <v-btn v-if="!alert" @click="useExtensionsManager">
+                        Make analysis
+                      </v-btn>
+                    </div>
+                  </template>
                   <div v-if="isSpinerExtensions" class="chart-spiner">
                     <v-progress-circular
                       :size="70"
@@ -133,13 +154,6 @@
                     :pieDatas="pieDatas"
                     :personalImpact="personalImpact"
                     :extensions="mainPieData"
-                  />
-                </v-card>
-              </v-tab-item>
-              <v-tab-item v-if="isPersistence">
-                <v-card flat>
-                  <PersistenceChart
-                    @persistenceData="changePersistenceData"
                   />
                 </v-card>
               </v-tab-item>
@@ -214,8 +228,7 @@ import RepositoriesInput from "../components/RepositoriesInput.vue";
 import FilePreview from "../components/FilePreview.vue";
 import FileExtensionsChart from "../components/FileExtensionsChart.vue";
 import AnalysisList from "../components/AnalysisList.vue";
-import ImpactCharts from "../components/ImpactCharts.vue";
-import PersistenceChart from "../components/PersistenceChart.vue";
+import ImpactCharts from "../components/ImpactCharts.vue"
 
 export default {
   components: {
@@ -232,8 +245,7 @@ export default {
     FilePreview,
     FileExtensionsChart,
     AnalysisList,
-    ImpactCharts,
-    PersistenceChart,
+    ImpactCharts
 },
   data: () => ({
     filePreview: "",
@@ -262,7 +274,7 @@ export default {
     tab: null,
     tabItems: ['Commit and Code', 'Extensions',],
     isImpact: false,
-    isPersistence: false,
+    alert: true,
   }),
   computed: {
     selectedIgnoredFiles: function () {
@@ -327,9 +339,9 @@ export default {
           this.selectedRepoPath = repository.path;
           this.selectedRepoTree = fileTree;
         }
-        if (localStorage.getItem("rawData")) {
-          this.rawData = JSON.parse(localStorage.getItem("rawData"));
-        }
+        // if (localStorage.getItem("rawData")) {
+        //   this.rawData = JSON.parse(localStorage.getItem("rawData"));
+        // }
       } else {
         if (localStorage.getItem("repos")) {
           this.repos = JSON.parse(localStorage.getItem("repos"));
@@ -422,9 +434,7 @@ export default {
         );
 
         const rawData = await this.$axios.$get(
-          `/gitlog?repo=${escape(repository.path)}${dates}${escape(
-            ignore
-          )}&raw=true`
+          `/gitlog?repo=${escape(repository.path)}${dates}${ignore}&raw=true`
         );
 
         analysis.rawData.push(rawData)
@@ -479,6 +489,12 @@ export default {
       } else {
         localStorage.hasData = 0;
       }
+    },
+    useExtensionsManager: function () {
+      // if (this.selectedIgnoredFiles && this.selectedIgnoredFiles != [] || this.alert) {
+        this.updateRepoData({repopath: this.selectedRepoPath, repotree: this.selectedRepoTree, ignores: this.selectedIgnoredFiles})
+        this.reloadImpact()
+        this.alert = false
     },
     ignoreFile: function (path, repositoryPath, isDirectory = false) {
       if (this.isIgnored(path, repositoryPath)) {
@@ -547,13 +563,6 @@ export default {
         }
       }
     },
-    switchPersistence: function (data) {
-      this.isPersistence = data.persistance;
-    },
-    changePersistenceData: function (data) {
-      console.log(`/survival?repo=${escape(this.selectedRepoPath)}&after=${data.after}&before=${data.before}&date=${data.date}`)
-      // let persistance = this.$axios.$get(`/survival?repo=${escape(this.selectedRepoPath)}&after=${data.after}&before=${data.before}&date=${data.date}`)
-    },
     onChangeIgnores: function (updatedIgnores) {
       const repo = this.repos.find((x) => x.path === updatedIgnores.repo);
       if (repo) {
@@ -565,6 +574,11 @@ export default {
     },
   },
   watch: {
+    selectedIgnoredFiles: function (value) {
+      this.alert = !(value && value.length != 0)
+      console.log(value)
+      console.log(!(value && value.length != 0))
+    },
     fileSelected: async function (value) {
       this.selectedFileName = value[0];
       this.filePreview = await this.$axios.$get(`/file?file=${escape(value)}`);
@@ -579,8 +593,8 @@ export default {
         this.selectedRepoTree = await this.$axios.$get(
             `/tree?repo=${escape(repo.path)}`
         );
-        this.updateRepoData({repopath: this.selectedRepoPath, repotree: this.selectedRepoTree})
-        this.reloadImpact()
+        // this.updateRepoData({repopath: this.selectedRepoPath, repotree: this.selectedRepoTree})
+        // this.reloadImpact()
         return;
       }
 
@@ -591,16 +605,16 @@ export default {
           this.selectedRepoTree = await this.$axios.$get(
             `/tree?repo=${escape(repo.path)}`
           );
-          this.updateRepoData({repopath: this.selectedRepoPath, repotree: this.selectedRepoTree})
-          this.reloadImpact()
+          // this.updateRepoData({repopath: this.selectedRepoPath, repotree: this.selectedRepoTree})
+          // this.reloadImpact()
           return;
         }
       }
 
       this.selectedRepoTree = [];
       this.selectedRepoPath = '';
-      this.updateRepoData({repopath: this.selectedRepoPath, repotree: this.selectedRepoTree})
-      this.reloadImpact()
+      // this.updateRepoData({repopath: this.selectedRepoPath, repotree: this.selectedRepoTree})
+      // this.reloadImpact()
     },
     repos: {
       handler(val, oldVal) {

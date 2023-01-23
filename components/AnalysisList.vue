@@ -76,12 +76,7 @@
     </v-text-field>
     <v-checkbox
       v-model="includeImpact"
-      label="Additional information"
-    ></v-checkbox>
-    <v-checkbox
-      v-model="includePersistence"
-      label="Persistence of code"
-      class="persistence-checkbox"
+      label="Time consuming"
     ></v-checkbox>
   </div>
 </template>
@@ -91,8 +86,7 @@
 export default {
   data: () => ({
     selectedAnalysis: {idx: null},
-    includeImpact: false,
-    includePersistence: false,
+    includeImpact: false
   }),
   props: {
     analyses: {
@@ -127,9 +121,6 @@ export default {
   watch: {
     includeImpact: function (value) {
       this.$emit('isImpact', {impact: value})
-    },
-    includePersistence: function (value) {
-      this.$emit('isPersistence', {persistance: value})
     }
   }
 }
@@ -143,8 +134,5 @@ export default {
 }
 .v-btn-toggle > .v-btn.v-btn--active {
   background-color: #424242 !important;
-}
-.persistence-checkbox {
-  margin: 0px;
 }
 </style>
