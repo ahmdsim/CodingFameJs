@@ -68,7 +68,7 @@ COPY --from=build /home/node/app/static /home/node/app/static
 EXPOSE 5000
 
 # set app serving to permissive / assigned
-ENV NUXT_HOST=0.0.0.0
+ENV NUXT_HOST=10.16.18.17
 # set app port
 ENV NUXT_PORT=5000
 
