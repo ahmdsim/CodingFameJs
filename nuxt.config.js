@@ -29,8 +29,8 @@ export default {
     { path: '/file', handler: '~/api/file.js' },
     { path: '/tree', handler: '~/api/tree.js' },
     { path: '/gitblame', handler: '~/api/gitblame.js' },
-    {path: '/extensions', handler: '~/api/extensions.js' },
-    {path: '/advancedgitblame', handler: '~/api/advancedgitblame.js' },
+    { path: '/extensions', handler: '~/api/extensions.js' },
+    { path: '/advancedgitblame', handler: '~/api/advancedgitblame.js' },
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
@@ -53,7 +53,9 @@ export default {
   ],
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
-  axios: {},
+  axios: {
+    baseURL: process.env.NODE_ENV !== 'production' ? 'http://localhost:3000' : 'http://http://10.16.18.17/'
+  },
 
   // PWA module configuration: https://go.nuxtjs.dev/pwa
   pwa: {
@@ -83,7 +85,7 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
-    extend (config, ctx) {
+    extend(config, ctx) {
       if (ctx.isClient) {
         config.devtool = '#source-map'
       }

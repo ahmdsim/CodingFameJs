@@ -10,6 +10,8 @@ services:
         - ~/repos:/repos
     networks:
         - nuxt-network
+    environment:
+        NODE_ENV: production
   web-server:
     image: nginx:1.17.10-alpine
     container_name: web-server
