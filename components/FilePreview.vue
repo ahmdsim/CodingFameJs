@@ -2,7 +2,7 @@
   <div>
     <v-card>
       <v-simple-table
-        v-show="filePreview"
+        v-if="filePreview"
         fixed-header
         height="600px"
       >
@@ -27,7 +27,7 @@
         </template>
       </v-simple-table>
     </v-card>
-    <div v-show="rowCommit">
+    <div v-if="rowCommit">
       <v-card>
         <v-card-text>
           Author: {{ rowCommit.author }} <br/>

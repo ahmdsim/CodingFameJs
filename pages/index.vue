@@ -1,5 +1,8 @@
 <template>
   <div id="wrapper">
+    <div>
+      <img src="/SmartInMediaLogo.svg" style="width: 500px;">
+    </div>
     <div id="range-select">
       <DatePicker
         :date-prop="date"
@@ -26,6 +29,7 @@
               @analize="analize"
               @changeTitle="changeAnalysisTitle"
               @isImpact="switchImpact"
+              @isPersistence="switchPersistence"
             />
           </div>
           <div class="mt-2">
@@ -59,17 +63,29 @@
     <v-row>
       <v-col>
         <div class="mt-3">
-          <v-card flat tile>
+          <v-card
+            flat
+            tile
+          >
             <template>
-              <client-only>
-                <v-tabs v-model="tab" align-with-title>
-                  <v-tabs-slider></v-tabs-slider>
-                  <v-tab v-for="(item, index) in tabItems" :key="index">
-                    {{ item }}
-                  </v-tab>
-                  <v-tab v-show="isImpact"> Impact </v-tab>
-                </v-tabs>
-              </client-only>
+              <v-tabs
+                v-model="tab"
+                align-with-title
+              >
+                <v-tabs-slider></v-tabs-slider>
+                <v-tab
+                  v-for="item in tabItems"
+                  :key="item"
+                >
+                  {{ item }}
+                </v-tab>
+                <v-tab v-if="isImpact">
+                  Impact
+                </v-tab>
+                <v-tab v-if="isPersistence">
+                  Persistence of code
+                </v-tab>
+              </v-tabs>
             </template>
             <v-tabs-items v-model="tab">
               <v-tab-item>
@@ -79,9 +95,9 @@
                     :key="index"
                     :repo="repo"
                     :dates="date"
-                    @stopSpiner="isSpiner = false"
+                    @stopSpiner="isSpiner = false;"
                   />
-                  <div v-show="isSpiner" class="chart-spiner">
+                  <div v-if="isSpiner" class="chart-spiner">
                     <v-progress-circular
                       :size="70"
                       :width="7"
@@ -100,9 +116,9 @@
               <v-tab-item>
                 <v-card flat>
                   <FileExtensionsChart
-                    v-show="!isSpinerExtensions"
+                    v-if="!isSpinerExtensions"
                     :pieData="mainPieData"
-                    @stopSpinerExtensions="isSpinerExtensions = false"
+                    @stopSpinerExtensions="isSpinerExtensions = false;"
                   />
                   <template>
                     <div>
@@ -115,9 +131,7 @@
                       >
                         <v-row>
                           <v-col cols="10">
-                            Are you sure you want to analize this repo without
-                            any ignored files? It may cause to unlimited
-                            calculations that will not end
+                            Are you sure you want to analize this repo without any ignored files? It may cause to unlimited calculations that will not end
                           </v-col>
                           <v-col cols="2">
                             <v-btn @click="useExtensionsManager">
@@ -126,12 +140,12 @@
                           </v-col>
                         </v-row>
                       </v-alert>
-                      <v-btn v-show="!alert" @click="useExtensionsManager">
+                      <v-btn v-if="!alert" @click="useExtensionsManager">
                         Make analysis
                       </v-btn>
                     </div>
                   </template>
-                  <div v-show="isSpinerExtensions" class="chart-spiner">
+                  <div v-if="isSpinerExtensions" class="chart-spiner">
                     <v-progress-circular
                       :size="70"
                       :width="7"
@@ -141,12 +155,19 @@
                   </div>
                 </v-card>
               </v-tab-item>
-              <v-tab-item v-show="isImpact">
+              <v-tab-item v-if="isImpact">
                 <v-card flat>
                   <ImpactCharts
                     :pieDatas="pieDatas"
                     :personalImpact="personalImpact"
                     :extensions="mainPieData"
+                  />
+                </v-card>
+              </v-tab-item>
+              <v-tab-item v-if="isPersistence">
+                <v-card flat>
+                  <PersistenceChart
+                    @persistenceData="changePersistenceData"
                   />
                 </v-card>
               </v-tab-item>
@@ -200,6 +221,11 @@
         />
       </v-col>
     </v-row>
+    <!-- <div id="nav">
+      <router-link to="/">Home</router-link> |
+      <router-link to="/persistence_of_code">Persistence</router-link>
+    </div> -->
+    <router-view/>
   </div>
 </template>
 <script>
@@ -222,6 +248,7 @@ import FilePreview from "../components/FilePreview.vue";
 import FileExtensionsChart from "../components/FileExtensionsChart.vue";
 import AnalysisList from "../components/AnalysisList.vue";
 import ImpactCharts from "../components/ImpactCharts.vue";
+import PersistenceChart from "../components/PersistenceChart.vue";
 
 export default {
   components: {
@@ -239,7 +266,8 @@ export default {
     FileExtensionsChart,
     AnalysisList,
     ImpactCharts,
-  },
+    PersistenceChart,
+},
   data: () => ({
     filePreview: "",
     selectedFileName: "",
@@ -265,18 +293,15 @@ export default {
     analyses: [],
     storedAnalyses: [],
     tab: null,
-    tabItems: ["Commit and Code", "Extensions"],
+    tabItems: ['Commit and Code', 'Extensions',],
     isImpact: false,
+    isPersistence: false,
     alert: true,
   }),
   computed: {
     selectedIgnoredFiles: function () {
-      if (
-        this.selectedRepoPath &&
-        this.repos.find((x) => x.path == this.selectedRepoPath)
-      ) {
-        return this.repos.find((x) => x.path == this.selectedRepoPath)
-          .ignoredFiles;
+      if (this.selectedRepoPath && this.repos.find((x) => x.path == this.selectedRepoPath)) {
+        return this.repos.find((x) => x.path == this.selectedRepoPath).ignoredFiles;
       }
       return [];
     },
@@ -308,22 +333,22 @@ export default {
       }
     },
     impact: function () {
-      return this.getImpact();
+      return this.getImpact()
     },
     personalImpact: function () {
-      return this.getPersonalImpact();
+      return this.getPersonalImpact()
     },
     pieDatas: function () {
-      return this.getPieDatas();
+      return this.getPieDatas()
     },
     mainPieData: function () {
-      return [["Type of files", "Lines of code"]].concat(this.getMainData());
+      return [['Type of files', 'Lines of code']].concat(this.getMainData())
     },
   },
   async mounted() {
     if (process.client) {
       this.isSpinerExtensions = true;
-      if (localStorage.getItem("hasData") == 1) {
+      if (localStorage.getItem("hasData")) {
         if (localStorage.getItem("date")) {
           this.date = JSON.parse(localStorage.getItem("date"));
         }
@@ -340,10 +365,7 @@ export default {
         //   this.rawData = JSON.parse(localStorage.getItem("rawData"));
         // }
       } else {
-        if (
-          localStorage.getItem("repos") &&
-          JSON.parse(localStorage.getItem("repos")).length > 0
-        ) {
+        if (localStorage.getItem("repos")) {
           this.repos = JSON.parse(localStorage.getItem("repos"));
           this.analize();
         } else {
@@ -361,16 +383,16 @@ export default {
       return str;
     },
     ...mapMutations({
-      updateRepoData: "ExtensionsManager/updateRepoData",
+      updateRepoData: 'ExtensionsManager/updateRepoData'
     }),
     ...mapActions({
-      reloadImpact: "ExtensionsManager/reloadImpact",
+      reloadImpact: 'ExtensionsManager/reloadImpact'
     }),
     ...mapGetters({
-      getImpact: "ExtensionsManager/getImpact",
-      getMainData: "ExtensionsManager/getMainPieData",
-      getPieDatas: "ExtensionsManager/getPieDatas",
-      getPersonalImpact: "ExtensionsManager/getPersonalImpact",
+      getImpact: 'ExtensionsManager/getImpact',
+      getMainData: 'ExtensionsManager/getMainPieData',
+      getPieDatas: 'ExtensionsManager/getPieDatas',
+      getPersonalImpact: 'ExtensionsManager/getPersonalImpact'
     }),
     switchImpact: function (data) {
       this.isImpact = data.impact;
@@ -379,21 +401,16 @@ export default {
       this.analyses = [];
     },
     declineOne: function (number) {
-      this.analyses.splice(number.index, 1);
+      this.analyses.splice(number.index, 1)
     },
     changeAnalysisTitle: function (data) {
-      this.analyses[data.idx].title = data.title;
+      this.analyses[data.idx].title = data.title
     },
     selectAnalysis: function (data) {
-      this.date = data.date;
-      this.repos = data.repos.map(
-        (repo) => new Repository(repo.path, repo.ignores, [], 0, 0)
-      );
-      this.analize();
-      this.changeAnalysisTitle({
-        idx: this.analyses.length - 1,
-        title: data.title,
-      });
+      this.date = data.date
+      this.repos = data.repos.map((repo) => (new Repository(repo.path, repo.ignores, [], 0, 0)))
+      this.analize()
+      this.changeAnalysisTitle({idx: this.analyses.length - 1, title: data.title})
     },
     chooseAnalysis: function (analysisData) {
       const analysis = analysisData.analysis;
@@ -410,9 +427,9 @@ export default {
     },
     reloadAnalysesStorage: function () {
       if (process.client) {
-        this.storedAnalyses = [];
-        if (localStorage.getItem("analyses")) {
-          this.storedAnalyses = JSON.parse(localStorage.getItem("analyses"));
+        this.storedAnalyses = []
+        if (localStorage.getItem('analyses')) {
+          this.storedAnalyses = JSON.parse(localStorage.getItem("analyses"))
         }
       }
     },
@@ -420,7 +437,7 @@ export default {
       this.isSpiner = true;
       this.authors = [];
       this.rawData = [];
-      let analysis = { rawData: [], authors: [] };
+      let analysis = {rawData: [], authors: []}
       this.repos.forEach(async (repository) => {
         if (repository.path === "") {
           return;
@@ -442,7 +459,7 @@ export default {
           `/gitlog?repo=${escape(repository.path)}${dates}${ignore}&raw=true`
         );
 
-        analysis.rawData.push(rawData);
+        analysis.rawData.push(rawData)
         this.rawData.push(rawData);
         const authors = [];
         for (const [key, value] of Object.entries(gitlog["authors"])) {
@@ -453,13 +470,7 @@ export default {
             author.lines.deleted += value.lines.deleted;
             author.details = author.details.concat(value.details);
           } else {
-            let newAuthor = new Author(
-              key,
-              null,
-              value.commits,
-              value.lines,
-              value.details
-            );
+            let newAuthor = new Author(key, null, value.commits, value.lines, value.details);
             authors.push(newAuthor);
             this.authors.push(newAuthor);
           }
@@ -471,17 +482,15 @@ export default {
         repository.commits = gitlog.commits;
         repository.lines = gitlog.lines;
         repository.authors = authors;
-        analysis.authors = analysis.authors.concat(
-          authors.filter((author) => !analysis.authors.includes(author))
-        );
+        analysis.authors = analysis.authors.concat(authors.filter(author => !(analysis.authors.includes(author))))
       });
+      
+      analysis.repos = structuredClone(this.repos)
+      analysis.date = this.date
+      analysis.title = this.date.join(' ')
+      this.analyses.push(analysis)
 
-      analysis.repos = structuredClone(this.repos);
-      analysis.date = this.date;
-      analysis.title = this.date.join(" ");
-      this.analyses.push(analysis);
-
-      if (this.repos.length > 0 && this.repos[0].path != "") {
+      if (this.repos.length > 0) {
         localStorage.repos = JSON.stringify(
           this.repos.map((repo) => {
             return {
@@ -497,7 +506,7 @@ export default {
         localStorage.hasData = 1;
 
         if (!this.selectedRepoPath) {
-          this.selectedRepoPath = this.repos[0].path;
+          this.selectedRepoPath = this.repos[0].path
         }
       } else {
         localStorage.hasData = 0;
@@ -505,13 +514,9 @@ export default {
     },
     useExtensionsManager: function () {
       // if (this.selectedIgnoredFiles && this.selectedIgnoredFiles != [] || this.alert) {
-      this.updateRepoData({
-        repopath: this.selectedRepoPath,
-        repotree: this.selectedRepoTree,
-        ignores: this.selectedIgnoredFiles,
-      });
-      this.reloadImpact();
-      this.alert = false;
+        this.updateRepoData({repopath: this.selectedRepoPath, repotree: this.selectedRepoTree, ignores: this.selectedIgnoredFiles})
+        this.reloadImpact()
+        this.alert = false
     },
     ignoreFile: function (path, repositoryPath, isDirectory = false) {
       if (this.isIgnored(path, repositoryPath)) {
@@ -536,7 +541,7 @@ export default {
     ignoreExtension: function (repopath, ext) {
       if (this.repos.find((x) => x.path === repopath)) {
         let repo = this.repos.find((x) => x.path === repopath);
-        repo.ignoredFiles.push(`*.${ext}`);
+        repo.ignoredFiles.push(`*.${ext}`)
       }
     },
     isIgnored: function (path, repositoryPath) {
@@ -580,6 +585,13 @@ export default {
         }
       }
     },
+    switchPersistence: function (data) {
+      this.isPersistence = data.persistance;
+    },
+    changePersistenceData: function (data) {
+      // console.log(`/survival?repo=${escape(this.selectedRepoPath)}&after=${data.after}&before=${data.before}&date=${data.date}`)
+      // let persistance = this.$axios.$get(`/survival?repo=${escape(this.selectedRepoPath)}&after=${data.after}&before=${data.before}&date=${data.date}`)
+    },
     onChangeIgnores: function (updatedIgnores) {
       const repo = this.repos.find((x) => x.path === updatedIgnores.repo);
       if (repo) {
@@ -592,23 +604,25 @@ export default {
   },
   watch: {
     selectedIgnoredFiles: function (value) {
-      this.alert = !(value && value.length != 0);
-      console.log(value);
-      console.log(!(value && value.length != 0));
+      this.alert = !(value && value.length != 0)
+      localStorage.setItem('selectedIgnoredFiles', this.selectedIgnoredFiles)
+      // console.log(value)
+      // console.log(!(value && value.length != 0))
     },
     fileSelected: async function (value) {
       this.selectedFileName = value[0];
       this.filePreview = await this.$axios.$get(`/file?file=${escape(value)}`);
       this.lastCommits = await this.$axios.$get(
-        `/gitblame?file=${escape(this.fileSelected)}`
-      );
+          `/gitblame?file=${escape(this.fileSelected)}`
+        );
     },
     selectedRepoPath: async function (value) {
       this.isSpinerExtensions = true;
+      localStorage.setItem('selectedRepoPath', value)
       if (this.repos.find((x) => x.path === value)) {
         const repo = this.repos.find((x) => x.path === value);
         this.selectedRepoTree = await this.$axios.$get(
-          `/tree?repo=${escape(repo.path)}`
+            `/tree?repo=${escape(repo.path)}`
         );
         // this.updateRepoData({repopath: this.selectedRepoPath, repotree: this.selectedRepoTree})
         // this.reloadImpact()
@@ -629,7 +643,7 @@ export default {
       }
 
       this.selectedRepoTree = [];
-      this.selectedRepoPath = "";
+      this.selectedRepoPath = '';
       // this.updateRepoData({repopath: this.selectedRepoPath, repotree: this.selectedRepoTree})
       // this.reloadImpact()
     },
@@ -649,7 +663,7 @@ export default {
       },
       deep: true,
     },
-    mainPieData: function () {
+    mainPieData: function() {
       this.isSpinerExtensions = false;
     },
   },

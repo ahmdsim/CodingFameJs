@@ -1,7 +1,7 @@
 <template>
   <div>
     <GChart
-      v-show="repo.length > 0"
+      v-if="repo.length > 0"
       type="ColumnChart"
       :data="lineChartData"
       :options="lineChartOptions"

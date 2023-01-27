@@ -1,6 +1,6 @@
 <template>
   <v-treeview
-    v-show="items.length > 0"
+    v-if="items.length > 0"
     :items="items"
     activatable
     item-key="path"
@@ -10,7 +10,7 @@
     :open.sync="innerOpenFile"
   >
     <template #prepend="{ item, open }">
-      <v-icon v-show="item.children && item.children.length > 0">
+      <v-icon v-if="item.children && item.children.length > 0">
         {{ open ? "mdi-folder-open" : "mdi-folder" }}
       </v-icon>
       <v-icon v-else>
@@ -20,7 +20,7 @@
 
     <template #append="{ item }">
       <v-btn
-        v-show="isIgnoredCallback(item.path, item.repo) === 1"
+        v-if="isIgnoredCallback(item.path, item.repo) === 1"
         icon
         @click.stop="stopIgnoreFileCallback(item.path, item.repo, item.children && item.children.length > 0)"
       >
@@ -29,7 +29,7 @@
         </v-icon>
       </v-btn>
       <v-btn
-        v-show="isIgnoredCallback(item.path, item.repo) === 2"
+        v-if="isIgnoredCallback(item.path, item.repo) === 2"
         icon
         @click.stop="stopIgnoreFileCallback(item.path, item.repo, item.children && item.children.length > 0)"
       >
@@ -38,7 +38,7 @@
         </v-icon>
       </v-btn>
       <v-btn
-        v-show="isIgnoredCallback(item.path, item.repo) === false"
+        v-if="isIgnoredCallback(item.path, item.repo) === false"
         icon
         @click.stop="ignoreFileCallback(item.path, item.repo, item.children && item.children.length > 0)"
       >

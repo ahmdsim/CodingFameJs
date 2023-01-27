@@ -80,6 +80,8 @@ export default async function (req, res, _) {
   const chartQueue = new Queue('gitblame-queue', 'redis://127.0.0.1:6379');
 
   chartQueue.process(async function (job, done) {
+    // let writer = fs.createWriteStream(`analyses/${jobHash}`) 
+  
     let repopath = job.data.repopath
     let ignores = job.data.ignores
     let files = [];
@@ -90,11 +92,11 @@ export default async function (req, res, _) {
     repotree.forEach((file) => {
       files = files.concat(extractFiles(file, ignores))
     });
-    fs.writeFile(`analyses/${jobHash}`, JSON.stringify({analysis: '{}', progress: 0}), (err) => {
-      if (err) {
-        console.log(err)
-      }
-    });
+    // fs.writeFile(`analyses/${jobHash}`, JSON.stringify({analysis: '{}', progress: 0}), (err) => {
+    //   if (err) {
+    //     console.log(err)
+    //   }
+    // });
 
     const blamejs = new BlameJS();   
     let authors = new Map();
@@ -129,7 +131,7 @@ export default async function (req, res, _) {
         }
       }
 
-      if (i % step == 0 && 0 < i % step < 10) {
+      if (i % step == 0 && 0 < (i / step)  && (i / step) < 10) {
         let intermediateAuthors = new Map()
         for (let author of authors.keys()) {
           intermediateAuthors.set(author, Object.fromEntries(authors.get(author).entries()))
@@ -137,32 +139,56 @@ export default async function (req, res, _) {
         let intermediate = JSON.stringify(Object.fromEntries(intermediateAuthors.entries()));
         
         var interProgress = 10 * (i / step)
+        // fs.rm(`analyses/process_${interProgress - 10}_${jobHash}`)
+        if (interProgress !== 10) {
+          fs.unlink(`analyses/process_${interProgress - 10}_${jobHash}`, (err) => {
+            if (err) throw err;
+            // console.log('path/file.txt was deleted');
+          });
+        }
 
-        fs.writeFile(`analyses/process_${i}_${jobHash}`, JSON.stringify(interProgress), (err) => {
-          if (err) {
-            console.log(err)
-          }
-        });
-    
-        fs.writeFile(`analyses/${jobHash}`, JSON.stringify({analysis: intermediate, progress: interProgress}), (err) => {
-          if (err) {
-            console.log(err)
-          }
-        });
+        fs.writeFileSync(`analyses/process_${interProgress}_${jobHash}`, JSON.stringify({analysis: intermediate, progress: interProgress}));
+        // fs.writeFileSync(`analyses/process_${interProgress}_${jobHash}`, `i = ${i}; step = ${step}; result = ${i / step}; first: ${0 < (i / step)}; second: ${(i / step) < 10}`);
+
+        // fs.writeFileSync(`analyses/process_${interProgress}_${jobHash}`, JSON.stringify(interProgress), (err) => {
+        //   if (err) {
+        //     console.log(err)
+        //   }
+        // });
+  
+        // writer.write(JSON.stringify({analysis: intermediate, progress: interProgress}));
+        // fs.writeFileSync(`analyses/${jobHash}`, JSON.stringify({analysis: intermediate, progress: interProgress}));
+        // fs.writeFile(`analyses/${jobHash}`, JSON.stringify({analysis: intermediate, progress: interProgress}), (err) => {
+        //   if (err) {
+        //     console.log(err)
+        //   }
+        // });
       }
     }
 
+    let resultAuthors = new Map()
     for (let author of authors.keys()) {
-      authors.set(author, Object.fromEntries(authors.get(author).entries()))
+      resultAuthors.set(author, Object.fromEntries(authors.get(author).entries()))
     }
+    let resultOutput = JSON.stringify(Object.fromEntries(resultAuthors.entries()));
+    fs.writeFileSync(`analyses/process_100_${jobHash}`, JSON.stringify({analysis: resultOutput, progress: 100}));
 
-    let output = JSON.stringify(Object.fromEntries(authors.entries()));
-
-    fs.writeFile(`analyses/${jobHash}`, JSON.stringify({analysis: output, progress: 100}), (err) => {
-      if (err) {
-        console.log(err)
-      }
+    fs.unlink(`analyses/process_90_${jobHash}`, (err) => {
+      if (err) throw err;
+      // console.log('path/file.txt was deleted');
     });
+        
+    // for (let author of authors.keys()) {
+    //   authors.set(author, Object.fromEntries(authors.get(author).entries()))
+    // }
+
+    // let output = JSON.stringify(Object.fromEntries(authors.entries()));
+
+    // fs.writeFile(`analyses/${jobHash}`, JSON.stringify({analysis: output, progress: 100}), (err) => {
+    //   if (err) {
+    //     console.log(err)
+    //   }
+    // });
     done(null, output)
   })
 
@@ -174,17 +200,66 @@ export default async function (req, res, _) {
   var jobHash = hash(jobData)
 
   let output = ''
+  
   try {
-    let fileData = fs.readFileSync(`analyses/${jobHash}`, {encoding: 'utf8', flag: 'r'})
-    output = fileData
+    var existenceFlag = false
+    for (var p = 0; p <= 10; p++) {
+      // console.log(p)
+      // fs.access("./myFolder/myFile.txt", (error) => {
+      //   if (error) {
+      //     console.log(error);
+      //     return;
+      //   }
+      
+      //   console.log("File Exists!");
+      // });
+      // console.log(`analyses/process_${10 * p}_${jobHash}`)
+      var path = `analyses/process_${10 * p}_${jobHash}`
+      fs.exists(path, (exists) => {
+        if (exists) {
+          existenceFlag = true
+          // console.log(path)
+          fs.readFile(path, (err, data) => {
+            if (err) {
+              console.error(err);
+              return;
+            }
+            output = data;
+            // console.log(output.length == 0)
+          });
+          // console.log(`analyses/process_${10 * p - 10}_${jobHash}`)
+          // let fileData = fs.readFileSync(`analyses/process_${10 * p}_${jobHash}`, {encoding: 'utf8', flag: 'r'})
+        }
+      });
+      if (fs.existsSync(path)) {
+        // fs.writeFileSync(`analyses/true_${jobHash}`, p);
+        // fs.readFile(path, (err, data) => {
+        //   if (err) {
+        //     console.error(err);
+        //     return;
+        //   }
+        //   console.log(data);
+        // });
+
+        let fileData = fs.readFileSync(path, {encoding: 'utf8', flag: 'r'})
+        output = fileData
+        break
+      }
+      // console.log(p == 10 && output.length == 0 && !existenceFlag)
+      // console.log(existenceFlag)
+      if (p == 10 && output.length == 0) {
+        chartQueue.add(jobData)
+      }
+    }
   } catch {
+    // console.log('something went wrong')
     chartQueue.add(jobData)
   }
 
   chartQueue.on('error', (err) => {
     fs.writeFile(`analyses/${jobHash}_error`, JSON.stringify(err), (erro) => {
       if (erro) {
-        console.log(erro)
+        // console.log(erro)
       }
     })})
 

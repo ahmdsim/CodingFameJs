@@ -21,7 +21,7 @@
       </template>
       <v-list min-width="200px">
         <v-list-item class="text-right">
-          <span v-show="analyses.length == 0">
+          <span v-if="analyses.length == 0">
             No analyses
           </span>
           <v-tooltip bottom>
@@ -35,8 +35,8 @@
                   right
                   x-small
                   color="error"
-                  @click="deleteAll"
                   class="clear-button"
+                  @click="deleteAll"
                 >
                   <v-icon x-small>
                     mdi-cancel
@@ -64,7 +64,7 @@
       </v-list>
     </v-menu>
     <v-text-field
-      v-show="selectedAnalysis.idx || selectedAnalysis.idx == 0"
+      v-if="selectedAnalysis.idx || selectedAnalysis.idx == 0"
       v-model="selectedAnalysis.title"
     >
       <v-icon
@@ -77,7 +77,17 @@
     <v-checkbox
       v-model="includeImpact"
       label="Time consuming"
-    ></v-checkbox>
+    />
+    <router-link to="/persistence_of_code">
+      <v-btn class="primary">
+        Persistence
+      </v-btn>
+    </router-link>
+    <!-- <v-checkbox
+      v-model="includePersistence"
+      label="Persistence of code"
+      class="persistence-checkbox"
+    ></v-checkbox> -->
   </div>
 </template>
 <script>
@@ -86,7 +96,8 @@
 export default {
   data: () => ({
     selectedAnalysis: {idx: null},
-    includeImpact: false
+    includeImpact: false,
+    includePersistence: false,
   }),
   props: {
     analyses: {
@@ -121,6 +132,9 @@ export default {
   watch: {
     includeImpact: function (value) {
       this.$emit('isImpact', {impact: value})
+    },
+    includePersistence: function (value) {
+      this.$emit('isPersistence', {persistance: value})
     }
   }
 }
@@ -134,5 +148,8 @@ export default {
 }
 .v-btn-toggle > .v-btn.v-btn--active {
   background-color: #424242 !important;
+}
+.persistence-checkbox {
+  margin: 0px;
 }
 </style>
