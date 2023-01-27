@@ -1,5 +1,6 @@
 FROM node:latest
 
+RUN apt-get install git
 RUN mkdir -p /var/www/dockerize-nuxt/nuxt-app
 WORKDIR /var/www/dockerize-nuxt/nuxt-app
 
@@ -7,9 +8,7 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
-
-RUN apt-get install git
-
+ENV NODE_OPTIONS=--openssl-legacy-provider
 RUN npm run build
 
 EXPOSE 3000
