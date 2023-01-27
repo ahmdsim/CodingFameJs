@@ -21,7 +21,7 @@
       </template>
       <v-list min-width="200px">
         <v-list-item class="text-right">
-          <span v-if="analyses.length == 0">
+          <span v-show="analyses.length == 0">
             No analyses
           </span>
           <v-tooltip bottom>
@@ -64,7 +64,7 @@
       </v-list>
     </v-menu>
     <v-text-field
-      v-if="selectedAnalysis.idx || selectedAnalysis.idx == 0"
+      v-show="selectedAnalysis.idx || selectedAnalysis.idx == 0"
       v-model="selectedAnalysis.title"
     >
       <v-icon

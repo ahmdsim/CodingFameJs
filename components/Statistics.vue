@@ -55,7 +55,7 @@
                     </v-icon>
                   </div>
                   <v-treeview
-                    v-if="authors.length > 0"
+                    v-show="authors.length > 0"
                     :items="authors"
                     item-key="id"
                     open-on-click
@@ -65,7 +65,7 @@
                     activatable
                   >
                     <template #prepend="{ item }">
-                      <v-icon v-if="item.hash">
+                      <v-icon v-show="item.hash">
                         mdi-source-commit
                       </v-icon>
                       <v-icon v-else-if="item.commits">
@@ -76,14 +76,14 @@
                       </v-icon>
                     </template>
                     <template #label="{ item }">
-                      <div v-if="item.hash || item.commits">{{ item.name }}</div>
+                      <div v-show="item.hash || item.commits">{{ item.name }}</div>
                       <div v-else>
-                        <span v-if="isIgnoredCallback(item.name, item.repopath)" class="ignored-files">{{ item.name }}</span>
+                        <span v-show="isIgnoredCallback(item.name, item.repopath)" class="ignored-files">{{ item.name }}</span>
                         <span v-else>{{ item.name }}</span>
                       </div>
                     </template>
                     <template #append="{ item }">
-                      <div v-if="!item.hash && !item.commits">
+                      <div v-show="!item.hash && !item.commits">
                         {{ item.LoC }}
                         <v-icon @click="ignoreFileCallback(item.repopath + '/' + item.name, item.repopath)">
                           mdi-file-document-remove
@@ -135,7 +135,7 @@
                   <v-tooltip bottom>
                     <template #activator="{ on, attrs }">
                       <span
-                        v-if="index % 2 == 0"
+                        v-show="index % 2 == 0"
                         v-bind="attrs"
                         v-on="on"
                       >{{ commit[1] }} LoC: {{ commit[2][0] }} -{{ commit[2][1] }} T: {{ commit[2][0] - commit[2][1] }}</span>

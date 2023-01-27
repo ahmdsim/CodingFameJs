@@ -2,9 +2,14 @@ version: '3'
 services:
   nuxt-app:
     image: gorlanovs/cfjs:latest
-    container_name: cfjs
+    container_name: nuxt-app
+    restart: always
+    ports:
+        - 3000:3000
     volumes:
         - ~/repos:/repos
+    networks:
+        - nuxt-network
   web-server:
     image: nginx:1.17.10-alpine
     container_name: web-server
@@ -13,7 +18,7 @@ services:
     ports:
         - 80:80
     networks:
-        nuxt-network:
+        - nuxt-network
     depends_on:
         - nuxt-app
     restart: unless-stopped

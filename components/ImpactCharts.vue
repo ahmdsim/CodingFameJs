@@ -1,5 +1,5 @@
 <template>
-  <div v-if="pieDatas.length >= 0" >
+  <div v-show="pieDatas.length >= 0" >
     <v-row>
       <v-col cols="9">
         <GChart

@@ -1,7 +1,7 @@
 <template>
   <div>
     <GChart
-      v-if="pieData.length != 0"
+      v-show="pieData.length != 0"
       type="PieChart"
       :options="pieChartOptions"
       :data="pieData"

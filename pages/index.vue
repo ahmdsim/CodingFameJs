@@ -75,7 +75,7 @@
                 >
                   {{ item }}
                 </v-tab>
-                <V-tab v-if="isImpact">
+                <V-tab v-show="isImpact">
                   Impact
                 </V-tab>
               </v-tabs>
@@ -90,7 +90,7 @@
                     :dates="date"
                     @stopSpiner="isSpiner = false;"
                   />
-                  <div v-if="isSpiner" class="chart-spiner">
+                  <div v-show="isSpiner" class="chart-spiner">
                     <v-progress-circular
                       :size="70"
                       :width="7"
@@ -109,7 +109,7 @@
               <v-tab-item>
                 <v-card flat>
                   <FileExtensionsChart
-                    v-if="!isSpinerExtensions"
+                    v-show="!isSpinerExtensions"
                     :pieData="mainPieData"
                     @stopSpinerExtensions="isSpinerExtensions = false;"
                   />
@@ -133,12 +133,12 @@
                           </v-col>
                         </v-row>
                       </v-alert>
-                      <v-btn v-if="!alert" @click="useExtensionsManager">
+                      <v-btn v-show="!alert" @click="useExtensionsManager">
                         Make analysis
                       </v-btn>
                     </div>
                   </template>
-                  <div v-if="isSpinerExtensions" class="chart-spiner">
+                  <div v-show="isSpinerExtensions" class="chart-spiner">
                     <v-progress-circular
                       :size="70"
                       :width="7"
@@ -148,7 +148,7 @@
                   </div>
                 </v-card>
               </v-tab-item>
-              <v-tab-item v-if="isImpact">
+              <v-tab-item v-show="isImpact">
                 <v-card flat>
                   <ImpactCharts
                     :pieDatas="pieDatas"
