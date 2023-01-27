@@ -59,26 +59,17 @@
     <v-row>
       <v-col>
         <div class="mt-3">
-          <v-card
-            flat
-            tile
-          >
+          <v-card flat tile>
             <template>
-              <v-tabs
-                v-model="tab"
-                align-with-title
-              >
-                <v-tabs-slider></v-tabs-slider>
-                <v-tab
-                  v-for="item in tabItems"
-                  :key="item"
-                >
-                  {{ item }}
-                </v-tab>
-                <V-tab v-show="isImpact">
-                  Impact
-                </V-tab>
-              </v-tabs>
+              <client-only>
+                <v-tabs v-model="tab" align-with-title>
+                  <v-tabs-slider></v-tabs-slider>
+                  <v-tab v-for="(item, index) in tabItems" :key="index">
+                    {{ item }}
+                  </v-tab>
+                  <v-tab v-show="isImpact"> Impact </v-tab>
+                </v-tabs>
+              </client-only>
             </template>
             <v-tabs-items v-model="tab">
               <v-tab-item>
@@ -88,7 +79,7 @@
                     :key="index"
                     :repo="repo"
                     :dates="date"
-                    @stopSpiner="isSpiner = false;"
+                    @stopSpiner="isSpiner = false"
                   />
                   <div v-show="isSpiner" class="chart-spiner">
                     <v-progress-circular
@@ -111,7 +102,7 @@
                   <FileExtensionsChart
                     v-show="!isSpinerExtensions"
                     :pieData="mainPieData"
-                    @stopSpinerExtensions="isSpinerExtensions = false;"
+                    @stopSpinerExtensions="isSpinerExtensions = false"
                   />
                   <template>
                     <div>
@@ -124,7 +115,9 @@
                       >
                         <v-row>
                           <v-col cols="10">
-                            Are you sure you want to analize this repo without any ignored files? It may cause to unlimited calculations that will not end
+                            Are you sure you want to analize this repo without
+                            any ignored files? It may cause to unlimited
+                            calculations that will not end
                           </v-col>
                           <v-col cols="2">
                             <v-btn @click="useExtensionsManager">
@@ -228,7 +221,7 @@ import RepositoriesInput from "../components/RepositoriesInput.vue";
 import FilePreview from "../components/FilePreview.vue";
 import FileExtensionsChart from "../components/FileExtensionsChart.vue";
 import AnalysisList from "../components/AnalysisList.vue";
-import ImpactCharts from "../components/ImpactCharts.vue"
+import ImpactCharts from "../components/ImpactCharts.vue";
 
 export default {
   components: {
@@ -245,8 +238,8 @@ export default {
     FilePreview,
     FileExtensionsChart,
     AnalysisList,
-    ImpactCharts
-},
+    ImpactCharts,
+  },
   data: () => ({
     filePreview: "",
     selectedFileName: "",
@@ -272,14 +265,18 @@ export default {
     analyses: [],
     storedAnalyses: [],
     tab: null,
-    tabItems: ['Commit and Code', 'Extensions',],
+    tabItems: ["Commit and Code", "Extensions"],
     isImpact: false,
     alert: true,
   }),
   computed: {
     selectedIgnoredFiles: function () {
-      if (this.selectedRepoPath && this.repos.find((x) => x.path == this.selectedRepoPath)) {
-        return this.repos.find((x) => x.path == this.selectedRepoPath).ignoredFiles;
+      if (
+        this.selectedRepoPath &&
+        this.repos.find((x) => x.path == this.selectedRepoPath)
+      ) {
+        return this.repos.find((x) => x.path == this.selectedRepoPath)
+          .ignoredFiles;
       }
       return [];
     },
@@ -311,16 +308,16 @@ export default {
       }
     },
     impact: function () {
-      return this.getImpact()
+      return this.getImpact();
     },
     personalImpact: function () {
-      return this.getPersonalImpact()
+      return this.getPersonalImpact();
     },
     pieDatas: function () {
-      return this.getPieDatas()
+      return this.getPieDatas();
     },
     mainPieData: function () {
-      return [['Type of files', 'Lines of code']].concat(this.getMainData())
+      return [["Type of files", "Lines of code"]].concat(this.getMainData());
     },
   },
   async mounted() {
@@ -343,7 +340,10 @@ export default {
         //   this.rawData = JSON.parse(localStorage.getItem("rawData"));
         // }
       } else {
-        if (localStorage.getItem("repos") && JSON.parse(localStorage.getItem("repos")).length > 0 ) {
+        if (
+          localStorage.getItem("repos") &&
+          JSON.parse(localStorage.getItem("repos")).length > 0
+        ) {
           this.repos = JSON.parse(localStorage.getItem("repos"));
           this.analize();
         } else {
@@ -361,16 +361,16 @@ export default {
       return str;
     },
     ...mapMutations({
-      updateRepoData: 'ExtensionsManager/updateRepoData'
+      updateRepoData: "ExtensionsManager/updateRepoData",
     }),
     ...mapActions({
-      reloadImpact: 'ExtensionsManager/reloadImpact'
+      reloadImpact: "ExtensionsManager/reloadImpact",
     }),
     ...mapGetters({
-      getImpact: 'ExtensionsManager/getImpact',
-      getMainData: 'ExtensionsManager/getMainPieData',
-      getPieDatas: 'ExtensionsManager/getPieDatas',
-      getPersonalImpact: 'ExtensionsManager/getPersonalImpact'
+      getImpact: "ExtensionsManager/getImpact",
+      getMainData: "ExtensionsManager/getMainPieData",
+      getPieDatas: "ExtensionsManager/getPieDatas",
+      getPersonalImpact: "ExtensionsManager/getPersonalImpact",
     }),
     switchImpact: function (data) {
       this.isImpact = data.impact;
@@ -379,16 +379,21 @@ export default {
       this.analyses = [];
     },
     declineOne: function (number) {
-      this.analyses.splice(number.index, 1)
+      this.analyses.splice(number.index, 1);
     },
     changeAnalysisTitle: function (data) {
-      this.analyses[data.idx].title = data.title
+      this.analyses[data.idx].title = data.title;
     },
     selectAnalysis: function (data) {
-      this.date = data.date
-      this.repos = data.repos.map((repo) => (new Repository(repo.path, repo.ignores, [], 0, 0)))
-      this.analize()
-      this.changeAnalysisTitle({idx: this.analyses.length - 1, title: data.title})
+      this.date = data.date;
+      this.repos = data.repos.map(
+        (repo) => new Repository(repo.path, repo.ignores, [], 0, 0)
+      );
+      this.analize();
+      this.changeAnalysisTitle({
+        idx: this.analyses.length - 1,
+        title: data.title,
+      });
     },
     chooseAnalysis: function (analysisData) {
       const analysis = analysisData.analysis;
@@ -405,9 +410,9 @@ export default {
     },
     reloadAnalysesStorage: function () {
       if (process.client) {
-        this.storedAnalyses = []
-        if (localStorage.getItem('analyses')) {
-          this.storedAnalyses = JSON.parse(localStorage.getItem("analyses"))
+        this.storedAnalyses = [];
+        if (localStorage.getItem("analyses")) {
+          this.storedAnalyses = JSON.parse(localStorage.getItem("analyses"));
         }
       }
     },
@@ -415,7 +420,7 @@ export default {
       this.isSpiner = true;
       this.authors = [];
       this.rawData = [];
-      let analysis = {rawData: [], authors: []}
+      let analysis = { rawData: [], authors: [] };
       this.repos.forEach(async (repository) => {
         if (repository.path === "") {
           return;
@@ -437,7 +442,7 @@ export default {
           `/gitlog?repo=${escape(repository.path)}${dates}${ignore}&raw=true`
         );
 
-        analysis.rawData.push(rawData)
+        analysis.rawData.push(rawData);
         this.rawData.push(rawData);
         const authors = [];
         for (const [key, value] of Object.entries(gitlog["authors"])) {
@@ -448,7 +453,13 @@ export default {
             author.lines.deleted += value.lines.deleted;
             author.details = author.details.concat(value.details);
           } else {
-            let newAuthor = new Author(key, null, value.commits, value.lines, value.details);
+            let newAuthor = new Author(
+              key,
+              null,
+              value.commits,
+              value.lines,
+              value.details
+            );
             authors.push(newAuthor);
             this.authors.push(newAuthor);
           }
@@ -460,13 +471,15 @@ export default {
         repository.commits = gitlog.commits;
         repository.lines = gitlog.lines;
         repository.authors = authors;
-        analysis.authors = analysis.authors.concat(authors.filter(author => !(analysis.authors.includes(author))))
+        analysis.authors = analysis.authors.concat(
+          authors.filter((author) => !analysis.authors.includes(author))
+        );
       });
-      
-      analysis.repos = structuredClone(this.repos)
-      analysis.date = this.date
-      analysis.title = this.date.join(' ')
-      this.analyses.push(analysis)
+
+      analysis.repos = structuredClone(this.repos);
+      analysis.date = this.date;
+      analysis.title = this.date.join(" ");
+      this.analyses.push(analysis);
 
       if (this.repos.length > 0 && this.repos[0].path != "") {
         localStorage.repos = JSON.stringify(
@@ -484,7 +497,7 @@ export default {
         localStorage.hasData = 1;
 
         if (!this.selectedRepoPath) {
-          this.selectedRepoPath = this.repos[0].path
+          this.selectedRepoPath = this.repos[0].path;
         }
       } else {
         localStorage.hasData = 0;
@@ -492,9 +505,13 @@ export default {
     },
     useExtensionsManager: function () {
       // if (this.selectedIgnoredFiles && this.selectedIgnoredFiles != [] || this.alert) {
-        this.updateRepoData({repopath: this.selectedRepoPath, repotree: this.selectedRepoTree, ignores: this.selectedIgnoredFiles})
-        this.reloadImpact()
-        this.alert = false
+      this.updateRepoData({
+        repopath: this.selectedRepoPath,
+        repotree: this.selectedRepoTree,
+        ignores: this.selectedIgnoredFiles,
+      });
+      this.reloadImpact();
+      this.alert = false;
     },
     ignoreFile: function (path, repositoryPath, isDirectory = false) {
       if (this.isIgnored(path, repositoryPath)) {
@@ -519,7 +536,7 @@ export default {
     ignoreExtension: function (repopath, ext) {
       if (this.repos.find((x) => x.path === repopath)) {
         let repo = this.repos.find((x) => x.path === repopath);
-        repo.ignoredFiles.push(`*.${ext}`)
+        repo.ignoredFiles.push(`*.${ext}`);
       }
     },
     isIgnored: function (path, repositoryPath) {
@@ -575,23 +592,23 @@ export default {
   },
   watch: {
     selectedIgnoredFiles: function (value) {
-      this.alert = !(value && value.length != 0)
-      console.log(value)
-      console.log(!(value && value.length != 0))
+      this.alert = !(value && value.length != 0);
+      console.log(value);
+      console.log(!(value && value.length != 0));
     },
     fileSelected: async function (value) {
       this.selectedFileName = value[0];
       this.filePreview = await this.$axios.$get(`/file?file=${escape(value)}`);
       this.lastCommits = await this.$axios.$get(
-          `/gitblame?file=${escape(this.fileSelected)}`
-        );
+        `/gitblame?file=${escape(this.fileSelected)}`
+      );
     },
     selectedRepoPath: async function (value) {
       this.isSpinerExtensions = true;
       if (this.repos.find((x) => x.path === value)) {
         const repo = this.repos.find((x) => x.path === value);
         this.selectedRepoTree = await this.$axios.$get(
-            `/tree?repo=${escape(repo.path)}`
+          `/tree?repo=${escape(repo.path)}`
         );
         // this.updateRepoData({repopath: this.selectedRepoPath, repotree: this.selectedRepoTree})
         // this.reloadImpact()
@@ -612,7 +629,7 @@ export default {
       }
 
       this.selectedRepoTree = [];
-      this.selectedRepoPath = '';
+      this.selectedRepoPath = "";
       // this.updateRepoData({repopath: this.selectedRepoPath, repotree: this.selectedRepoTree})
       // this.reloadImpact()
     },
@@ -632,9 +649,9 @@ export default {
       },
       deep: true,
     },
-    mainPieData: function() {
+    mainPieData: function () {
       this.isSpinerExtensions = false;
-    }
+    },
   },
 };
 </script>
