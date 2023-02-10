@@ -1,0 +1,30 @@
+version: '3'
+services:
+  nuxt-app:
+    image: gorlanovs/cfjs:latest
+    container_name: nuxt-app
+    restart: always
+    ports:
+        - 3000:3000
+    volumes:
+        - ./repos:/repos
+    networks:
+        - nuxt-network
+    environment:
+        NODE_ENV: production
+  web-server:
+    image: nginx:1.17.10-alpine
+    container_name: web-server
+    volumes:
+        - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+        - 80:80
+    networks:
+        - nuxt-network
+    depends_on:
+        - nuxt-app
+    restart: unless-stopped
+
+networks:
+  nuxt-network:
+    driver: bridge
