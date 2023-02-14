@@ -35,6 +35,8 @@
           <div class="mt-2">
             <SaveConfiguration
               :analyses="analyses"
+              :repos="repos"	
+              :date="date"
               @reloadStorage="reloadAnalysesStorage"
               @declineAll="declineAllAnalysis"
             />
