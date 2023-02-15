@@ -3,7 +3,7 @@
     <v-menu offset-y>
       <template #activator="{ on, attrs }">
         <v-btn-toggle class="analize-button">
-          <v-btn active-class="" color="secondary" elevation="2" @click="analize">
+          <v-btn block active-class="" color="secondary" elevation="2" @click="analize">
             Analize
           </v-btn>
           <v-btn
@@ -17,10 +17,6 @@
               mdi-chevron-down
             </v-icon>
           </v-btn>
-          <v-checkbox
-            v-model="includeImpact"
-            label="Time consuming"
-          />
         </v-btn-toggle>
       </template>
       <v-list min-width="200px">
@@ -146,6 +142,7 @@ export default {
 <style scoped>
 .analize-button {
   background-color: gray;
+  width: calc( 100% - 48px );
 }
 .clear-button {
   top: 13px;

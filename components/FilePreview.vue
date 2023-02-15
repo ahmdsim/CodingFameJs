@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="pb-5">
     <v-card>
       <v-simple-table
         v-if="filePreview"

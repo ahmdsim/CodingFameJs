@@ -1,0 +1,43 @@
+.v-application {
+    a {
+        text-decoration: none;
+    }
+    .logo {
+        img {
+            max-width: 320px;
+        }
+    }
+    .menu {
+        display: flex;
+        list-style: none;
+        padding: 0px 24px;
+        margin: 0px 0 12px 0px;
+        border-top: 1px solid #ddd;
+        border-bottom: 1px solid #ddd;
+        button {
+            font-weight: normal;
+        }
+    }
+    .container--fluid {
+        padding: 0;
+    }
+    .aside {
+        border-right: 1px solid #e1e4e8;
+        box-shadow: 82px 0 0 0 #fff inset, 83px 0 0 0 #e1e4e8 inset;
+        background: #f6f8fa;
+    }
+    .v-tab {
+        min-width: 70px;
+    }
+    .v-tabs-items {
+        padding-left: 20px;
+        padding-right: 10px;
+        background-color: transparent !important;
+    }
+    .theme--light.v-tabs > .v-tabs-bar {
+        background-color: transparent;
+    }
+    .v-footer{
+        display: none;
+    }
+}

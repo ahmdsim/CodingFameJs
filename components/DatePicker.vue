@@ -1,63 +1,58 @@
 <template>
-  <v-row justify="space-around">
-    <v-col cols="3">
-      <div class="date-from-range">
-        <v-menu
-          ref="datePicker"
-          v-model="datePicker"
-          :close-on-content-click="false"
-          :return-value.sync="newDate"
-          transition="scale-transition"
-          offset-y
-          min-width="auto"
-        >
-          <template #activator="{ on, attrs }">
-            <v-text-field
-              :value="dateRange"
-              label="Date filter"
-              prepend-icon="mdi-calendar"
-              readonly
-              v-bind="attrs"
-              v-on="on"
-            />
-          </template>
-          <v-date-picker
-            v-model="newDate"
-            range
-            no-title
-            scrollable
-            @change="saveDate"
-          >
-            <v-spacer />
-            <v-btn text color="primary" @click="datePicker = false">
-              Cancel
-            </v-btn>
-            <v-btn
-              text
-              color="primary"
-              @click="$refs.datePicker.save(newDate)"
-            >
-              OK
-            </v-btn>
-          </v-date-picker>
-        </v-menu>
-      </div>
-    </v-col>
-    <v-col cols="3">
-      <div class="predefined-date-range">
-        <v-select
-          ref="predefinedDateRangeRef"
+  <div class="datarange">
+    <div class="date-from-range">
+      <v-menu
+        ref="datePicker"
+        v-model="datePicker"
+        :close-on-content-click="false"
+        :return-value.sync="newDate"
+        transition="scale-transition"
+        offset-y
+        min-width="auto"
+      >
+        <template #activator="{ on, attrs }">
+          <v-text-field
+            :value="dateRange"
+            label="Date filter"
+            prepend-icon="mdi-calendar"
+            readonly
+            v-bind="attrs"
+            v-on="on"
+          />
+        </template>
+        <v-date-picker
           v-model="newDate"
-          :items="predifineDateRanges"
-          label="Other ranges"
-          item-text="title"
-          item-value="value"
+          range
+          no-title
+          scrollable
           @change="saveDate"
-        />
-      </div>
-    </v-col>
-    <v-col cols="3" />
-  </v-row>
+        >
+          <v-spacer />
+          <v-btn text color="primary" @click="datePicker = false">
+            Cancel
+          </v-btn>
+          <v-btn
+            text
+            color="primary"
+            @click="$refs.datePicker.save(newDate)"
+          >
+            OK
+          </v-btn>
+        </v-date-picker>
+      </v-menu>
+    </div>
+    <div class="predefined-date-range">
+      <v-select
+        ref="predefinedDateRangeRef"
+        v-model="newDate"
+        :items="predifineDateRanges"
+        label="Other ranges"
+        item-text="title"
+        item-value="value"
+        @change="saveDate"
+      />
+    </div>
+  </div>
 </template>
 <script>
 /* eslint-disable */

@@ -1,178 +1,75 @@
 <template>
   <div id="wrapper">
-    <div>
-      <img src="/SmartInMediaLogo.svg" style="width: 500px" />
+    <!-- LOGO -->
+    <div class="logo">
+      <img src="/SmartInMediaLogo.svg" />
     </div>
-    <div id="range-select">
-      <DatePicker
-        :date-prop="date"
-        :date-range="dateRange"
-        @changeDate="onChangeDate"
-      />
-      <v-row justify="space-around">
-        <v-col cols="3">
-          <div class="repositories-input">
-            <RepositoriesInput
-              :repos="repos"
-              @addRepository="addRepository"
-              @removeRepository="removeRepository"
-            />
-          </div>
-        </v-col>
-        <v-col cols="3">
-          <div class="analyze-button">
-            <AnalysisList
-              :analyses="analyses"
-              @declineAll="declineAllAnalysis"
-              @changeAnalize="chooseAnalysis"
-              @declineOne="declineOne"
-              @analize="analize"
-              @changeTitle="changeAnalysisTitle"
-              @isImpact="switchImpact"
-              @isPersistence="switchPersistence"
-            />
-          </div>
-          <div class="mt-2">
-            <SaveConfiguration
-              :analyses="analyses"
-              :repos="repos"	
-              :date="date"
-              @reloadStorage="reloadAnalysesStorage"
-              @declineAll="declineAllAnalysis"
-            />
-          </div>
-          <LoadConfiguration
-            :stored-analyses="storedAnalyses"
-            @selectAnalysis="selectAnalysis"
-          />
-        </v-col>
-        <v-col cols="3" />
-      </v-row>
-      <v-row justify="space-around">
-        <v-col cols="1">
-          <h1>Results</h1>
-        </v-col>
-      </v-row>
-      <Statistics
-        :repos="repos"
-        :sorted-authors="sortedAuthors"
-        :ignore-file-callback="ignoreFile"
-        :ignore-extension-callback="ignoreExtension"
-        :is-ignored-callback="isIgnored"
-      />
-    </div>
-    <v-divider class="mt-5" />
+
+    <!-- MENU -->
+    <ul class="menu">
+      <li><v-btn text><v-icon left dark>mdi-file-import</v-icon>Load Configuration</v-btn></li>
+      <li><v-btn text><v-icon left dark>mdi-content-save</v-icon>Export Configuration</v-btn></li>
+      <li>
+        <router-link to="/persistence_of_code">
+          <v-btn text><v-icon left dark>mdi-chart-line</v-icon>Persistance</v-btn>
+        </router-link>
+      </li>
+    </ul>
+
     <v-row>
-      <v-col>
-        <div class="mt-3">
-          <v-card flat tile>
-            <template>
-              <client-only>
-                <v-tabs v-model="tab" align-with-title>
-                  <v-tabs-slider></v-tabs-slider>
-                  <v-tab v-for="item in tabItems" :key="item">
-                    {{ item }}
-                  </v-tab>
-                  <v-tab v-if="isImpact"> Impact </v-tab>
-                  <v-tab v-if="isPersistence"> Persistence of code </v-tab>
-                </v-tabs>
-              </client-only>
-            </template>
-            <v-tabs-items v-model="tab">
-              <v-tab-item>
-                <v-card flat class="commit-chart-window">
-                  <commits-and-code-chart
-                    v-for="(repo, index) in rawData"
-                    :key="index"
-                    :repo="repo"
-                    :dates="date"
-                    @stopSpiner="isSpiner = false"
-                  />
-                  <div v-if="isSpiner" class="chart-spiner">
-                    <v-progress-circular
-                      :size="70"
-                      :width="7"
-                      color="primary"
-                      indeterminate
-                    />
-                  </div>
-                  <DateChanger
-                    :date="date"
-                    :date-range="dateRange"
-                    @changeDate="onChangeDate"
-                    @analize="analize"
-                  />
-                </v-card>
-              </v-tab-item>
-              <v-tab-item>
-                <v-card flat>
-                  <FileExtensionsChart
-                    v-if="!isSpinerExtensions"
-                    :pieData="mainPieData"
-                    @stopSpinerExtensions="isSpinerExtensions = false"
-                  />
-                  <template>
-                    <div>
-                      <v-alert
-                        v-model="alert"
-                        border="left"
-                        close-text="Close Alert"
-                        color="primary"
-                        dark
-                      >
-                        <v-row>
-                          <v-col cols="10">
-                            Are you sure you want to analize this repo without
-                            any ignored files? It may cause to unlimited
-                            calculations that will not end
-                          </v-col>
-                          <v-col cols="2">
-                            <v-btn @click="useExtensionsManager">
-                              Anyway analize
-                            </v-btn>
-                          </v-col>
-                        </v-row>
-                      </v-alert>
-                      <v-btn v-if="!alert" @click="useExtensionsManager">
-                        Make analysis
-                      </v-btn>
-                    </div>
-                  </template>
-                  <div v-if="isSpinerExtensions" class="chart-spiner">
-                    <v-progress-circular
-                      :size="70"
-                      :width="7"
-                      color="primary"
-                      indeterminate
-                    />
-                  </div>
-                </v-card>
-              </v-tab-item>
-              <v-tab-item v-if="isImpact">
-                <v-card flat>
-                  <ImpactCharts
-                    :pieDatas="pieDatas"
-                    :personalImpact="personalImpact"
-                    :extensions="mainPieData"
-                  />
-                </v-card>
-              </v-tab-item>
-              <v-tab-item v-if="isPersistence">
-                <v-card flat>
-                  <PersistenceChart @persistenceData="changePersistenceData" />
-                </v-card>
-              </v-tab-item>
-            </v-tabs-items>
-          </v-card>
-        </div>
-      </v-col>
-    </v-row>
-    <v-spacer />
-    <v-divider />
-    <v-row class="mt-5">
-      <v-col cols="6">
-        <v-row>
-          <v-col cols="md-8">
+      <!-- Left dashboard menu-->
+      <v-col cols="4" class="aside">
+        <v-tabs transparent no-transition vertical>
+          <v-tab><v-icon>mdi-source-branch</v-icon></v-tab>
+          <v-tab><v-icon>mdi-filter</v-icon></v-tab>
+          <v-tab><v-icon>mdi-file-minus</v-icon></v-tab>
+
+          <v-tab-item>
+            <div class="repositories-input">
+              <RepositoriesInput
+                :repos="repos"
+                @addRepository="addRepository"
+                @removeRepository="removeRepository"
+              />
+            </div>
+            <div class="analyze-button">
+              <AnalysisList
+                :analyses="analyses"
+                @declineAll="declineAllAnalysis"
+                @changeAnalize="chooseAnalysis"
+                @declineOne="declineOne"
+                @analize="analize"
+                @changeTitle="changeAnalysisTitle"
+                @isImpact="switchImpact"
+                @isPersistence="switchPersistence"
+              />
+            </div>
+            <div class="mt-2">
+              <SaveConfiguration
+                :analyses="analyses"
+                :repos="repos"
+                :date="date"
+                @reloadStorage="reloadAnalysesStorage"
+                @declineAll="declineAllAnalysis"
+                ref="saveConfigurationRef"
+              />
+            </div>
+            <LoadConfiguration
+              :stored-analyses="storedAnalyses"
+              @selectAnalysis="selectAnalysis"
+              ref="loadConfigurationRef"
+            />
+          </v-tab-item>
+
+          <v-tab-item>
+            <DatePicker
+                :date-prop="date"
+                :date-range="dateRange"
+                @changeDate="onChangeDate"
+              />
+          </v-tab-item>
+
+          <v-tab-item>
             <div class="select-repository">
               <v-select
                 v-model="selectedRepoPath"
@@ -182,34 +79,146 @@
                 item-value="value"
               />
             </div>
-          </v-col>
-          <v-col cols="md-4">
-            <div class="commits-count">
-              <EditIgnores
-                :repo="selectedRepoPath"
-                :ignored-files="selectedIgnoredFiles"
-                @ignores="onChangeIgnores"
+            <EditIgnores
+              :repo="selectedRepoPath"
+              :ignored-files="selectedIgnoredFiles"
+              @ignores="onChangeIgnores"
+            />
+            <div class="project-tree">
+              <project-tree
+                :items="selectedRepoTree"
+                :active-file.sync="fileSelected"
+                :open-file.sync="fileOpened"
+                :is-ignored-callback="isIgnored"
+                :stop-ignore-file-callback="stopIgnoreFile"
+                :ignore-file-callback="ignoreFile"
               />
+            </div>
+            <FilePreview
+              :file-preview="filePreview"
+              :selected-file-name="selectedFileName"
+              :last-commits="lastCommits"
+            />
+          </v-tab-item>
+        </v-tabs>
+      </v-col>
+
+      <!-- Main content-->
+      <v-col cols="8" class="dashboard-content">
+        <h1>Results</h1>
+        <Statistics
+          :repos="repos"
+          :sorted-authors="sortedAuthors"
+          :ignore-file-callback="ignoreFile"
+          :ignore-extension-callback="ignoreExtension"
+          :is-ignored-callback="isIgnored"
+        />
+        <v-divider class="mt-5" />
+        <v-row>
+          <v-col>
+            <div class="mt-3">
+              <v-card flat tile>
+                <template>
+                  <client-only>
+                    <v-tabs v-model="tab" align-with-title>
+                      <v-tabs-slider></v-tabs-slider>
+                      <v-tab v-for="item in tabItems" :key="item">
+                        {{ item }}
+                      </v-tab>
+                      <v-tab v-if="isImpact"> Impact </v-tab>
+                      <v-tab v-if="isPersistence"> Persistence of code </v-tab>
+                    </v-tabs>
+                  </client-only>
+                </template>
+                <v-tabs-items v-model="tab">
+                  <v-tab-item>
+                    <v-card flat class="commit-chart-window">
+                      <commits-and-code-chart
+                        v-for="(repo, index) in rawData"
+                        :key="index"
+                        :repo="repo"
+                        :dates="date"
+                        @stopSpiner="isSpiner = false"
+                      />
+                      <div v-if="isSpiner" class="chart-spiner">
+                        <v-progress-circular
+                          :size="70"
+                          :width="7"
+                          color="primary"
+                          indeterminate
+                        />
+                      </div>
+                      <DateChanger
+                        :date="date"
+                        :date-range="dateRange"
+                        @changeDate="onChangeDate"
+                        @analize="analize"
+                      />
+                    </v-card>
+                  </v-tab-item>
+                  <v-tab-item>
+                    <v-card flat>
+                      <FileExtensionsChart
+                        v-if="!isSpinerExtensions"
+                        :pieData="mainPieData"
+                        @stopSpinerExtensions="isSpinerExtensions = false"
+                      />
+                      <template>
+                        <div>
+                          <v-alert
+                            v-model="alert"
+                            border="left"
+                            close-text="Close Alert"
+                            color="primary"
+                            dark
+                          >
+                            <v-row>
+                              <v-col cols="10">
+                                Are you sure you want to analize this repo without
+                                any ignored files? It may cause to unlimited
+                                calculations that will not end
+                              </v-col>
+                              <v-col cols="2">
+                                <v-btn @click="useExtensionsManager">
+                                  Anyway analize
+                                </v-btn>
+                              </v-col>
+                            </v-row>
+                          </v-alert>
+                          <v-btn v-if="!alert" @click="useExtensionsManager">
+                            Make analysis
+                          </v-btn>
+                        </div>
+                      </template>
+                      <div v-if="isSpinerExtensions" class="chart-spiner">
+                        <v-progress-circular
+                          :size="70"
+                          :width="7"
+                          color="primary"
+                          indeterminate
+                        />
+                      </div>
+                    </v-card>
+                  </v-tab-item>
+                  <v-tab-item v-if="isImpact">
+                    <v-card flat>
+                      <ImpactCharts
+                        :pieDatas="pieDatas"
+                        :personalImpact="personalImpact"
+                        :extensions="mainPieData"
+                      />
+                    </v-card>
+                  </v-tab-item>
+                  <v-tab-item v-if="isPersistence">
+                    <v-card flat>
+                      <PersistenceChart @persistenceData="changePersistenceData" />
+                    </v-card>
+                  </v-tab-item>
+                </v-tabs-items>
+              </v-card>
             </div>
           </v-col>
         </v-row>
-        <div class="project-tree">
-          <project-tree
-            :items="selectedRepoTree"
-            :active-file.sync="fileSelected"
-            :open-file.sync="fileOpened"
-            :is-ignored-callback="isIgnored"
-            :stop-ignore-file-callback="stopIgnoreFile"
-            :ignore-file-callback="ignoreFile"
-          />
-        </div>
-      </v-col>
-      <v-col cols="6">
-        <FilePreview
-          :file-preview="filePreview"
-          :selected-file-name="selectedFileName"
-          :last-commits="lastCommits"
-        />
       </v-col>
     </v-row>
     <!-- <div id="nav">
@@ -349,12 +358,14 @@ export default {
         }
         if (localStorage.getItem("repos")) {
           this.repos = JSON.parse(localStorage.getItem("repos"));
-          let repository = this.repos[0];
-          const fileTree = await this.$axios.$get(
-            `/tree?repo=${escape(repository.path)}`
-          );
-          this.selectedRepoPath = repository.path;
-          this.selectedRepoTree = fileTree;
+          if (this.repos.length) {
+            let repository = this.repos[0];
+            const fileTree = await this.$axios.$get(
+              `/tree?repo=${escape(repository.path)}`
+            );
+            this.selectedRepoPath = repository.path;
+            this.selectedRepoTree = fileTree;
+          }
         }
         // if (localStorage.getItem("rawData")) {
         //   this.rawData = JSON.parse(localStorage.getItem("rawData"));
@@ -686,16 +697,15 @@ export default {
 </script>
 <style scoped>
 .project-tree {
-  max-height: 500px;
+  margin: 10px 0;
+  max-height: 300px;
   overflow-y: auto;
-}
-.commit-chart-window {
-  height: 300px;
-  overflow-y: auto;
-  overflow-x: hidden;
 }
 .chart-spiner {
   margin: 0 auto;
   width: 70px;
+}
+.dashboard-content {
+  padding: 20px 60px 20px 40px ;
 }
 </style>
