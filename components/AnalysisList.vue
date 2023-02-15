@@ -17,6 +17,10 @@
               mdi-chevron-down
             </v-icon>
           </v-btn>
+          <v-checkbox
+            v-model="includeImpact"
+            label="Time consuming"
+          />
         </v-btn-toggle>
       </template>
       <v-list min-width="200px">

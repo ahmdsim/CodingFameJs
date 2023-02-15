@@ -18,6 +18,13 @@
     >
       The analysis has been loaded
     </v-snackbar>
+    <v-file-input
+      ref="fileSelectedRef"
+      accept=".cfj"
+      chips
+      label="Import configuration"
+      @change="configFileSelected"
+    />
   </div>
 </template>
 <script>
@@ -32,6 +39,25 @@ export default {
       type: Array,
       default: () => []
     }
+  },
+  methods: {
+    configFileSelected: function (configFile) {
+      if (configFile) {
+        const reader = new FileReader();
+        reader.readAsText(configFile);
+        reader.onload = (configFile) => this.loadConfiguration(configFile.target.result, configFile.name);
+        this.snackbarText = "The configuration has been imported"
+        this.snackbar = true;
+        this.$refs['fileSelectedRef'].reset();
+      }
+    },
+    loadConfiguration: function (data, name) {
+      const parsedData = JSON.parse(data);
+      console.log(parsedData)
+      if (parsedData && parsedData.repos && parsedData.date) {
+        this.$emit('selectAnalysis', {date: parsedData.date, repos: parsedData.repos, title: name});
+      }
+    },
   },
   watch: {
     selectedStorageConfig: async function (value) {
