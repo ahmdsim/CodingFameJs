@@ -2,16 +2,35 @@
   <div id="wrapper">
     <!-- LOGO -->
     <div class="logo">
-      <img src="/SmartInMediaLogo.svg" />
+      <img src="/SmartInMediaLogo.svg">
     </div>
 
     <!-- MENU -->
     <ul class="menu">
-      <li><v-btn text><v-icon left dark>mdi-file-import</v-icon>Load Configuration</v-btn></li>
-      <li><v-btn text><v-icon left dark>mdi-content-save</v-icon>Export Configuration</v-btn></li>
+      <li>
+        <v-btn text>
+          <v-icon left dark>
+            mdi-file-import
+          </v-icon>
+          Load Configuration
+        </v-btn>
+      </li>
+      <li>
+        <v-btn text>
+          <v-icon left dark>
+            mdi-content-save
+          </v-icon>
+          Export Configuration
+        </v-btn>
+      </li>
       <li>
         <router-link to="/persistence_of_code">
-          <v-btn text><v-icon left dark>mdi-chart-line</v-icon>Persistance</v-btn>
+          <v-btn text>
+            <v-icon left dark>
+              mdi-chart-line
+            </v-icon>
+            Persistance
+          </v-btn>
         </router-link>
       </li>
     </ul>
@@ -51,22 +70,20 @@
                 :date="date"
                 @reloadStorage="reloadAnalysesStorage"
                 @declineAll="declineAllAnalysis"
-                ref="saveConfigurationRef"
               />
             </div>
             <LoadConfiguration
               :stored-analyses="storedAnalyses"
               @selectAnalysis="selectAnalysis"
-              ref="loadConfigurationRef"
             />
           </v-tab-item>
 
           <v-tab-item>
             <DatePicker
-                :date-prop="date"
-                :date-range="dateRange"
-                @changeDate="onChangeDate"
-              />
+              :date-prop="date"
+              :date-range="dateRange"
+              @changeDate="onChangeDate"
+            />
           </v-tab-item>
 
           <v-tab-item>
@@ -118,15 +135,19 @@
           <v-col>
             <div class="mt-3">
               <v-card flat tile>
-                <template>
+                <template id="persistenceTabs">
                   <client-only>
                     <v-tabs v-model="tab" align-with-title>
-                      <v-tabs-slider></v-tabs-slider>
+                      <v-tabs-slider />
                       <v-tab v-for="item in tabItems" :key="item">
                         {{ item }}
                       </v-tab>
-                      <v-tab v-if="isImpact"> Impact </v-tab>
-                      <v-tab v-if="isPersistence"> Persistence of code </v-tab>
+                      <v-tab v-if="isImpact">
+                        Impact
+                      </v-tab>
+                      <v-tab v-if="isPersistence">
+                        Persistence of code
+                      </v-tab>
                     </v-tabs>
                   </client-only>
                 </template>
@@ -134,9 +155,9 @@
                   <v-tab-item>
                     <v-card flat class="commit-chart-window">
                       <commits-and-code-chart
-                        v-for="(repo, index) in rawData"
+                        v-for="(repo, index) in rawData.slice(0, 1)"
                         :key="index"
-                        :repo="repo"
+                        :rawData="rawData"
                         :dates="date"
                         @stopSpiner="isSpiner = false"
                       />
