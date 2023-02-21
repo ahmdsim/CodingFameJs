@@ -1,7 +1,7 @@
 <template>
   <div>
     <GChart
-      v-if="repo.length > 0"
+      v-if="rawData.length > 0"
       type="ColumnChart"
       :data="lineChartData"
       :options="lineChartOptions"
@@ -21,7 +21,7 @@ export default {
     reponame: {
       type: String,
     },
-    repo: {
+    rawData: {
       type: Array,
       default: () => {},
     },
@@ -67,13 +67,15 @@ export default {
     createChartForDates() {
       const commits = {};
       const lines = {};
-      this.repo.forEach((commit) => {
+      this.rawData.forEach((repo) => {
+        repo.forEach((commit) => {
         var date = new Date(commit.date);
         var dateKey = date.toISOString().substring(0, 10);
         commits[dateKey] = (commits[dateKey] ?? 0) + 1;
         lines[dateKey] =
           (lines[dateKey] ?? 0) +
           commit.stat.reduce((p, c) => p + c.added + c.deleted, 0);
+        })
       });
       var dates = this.getDatesBetween(
         new Date(this.dates[0]),

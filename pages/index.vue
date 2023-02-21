@@ -35,7 +35,7 @@
           <div class="mt-2">
             <SaveConfiguration
               :analyses="analyses"
-              :repos="repos"	
+              :repos="repos"
               :date="date"
               @reloadStorage="reloadAnalysesStorage"
               @declineAll="declineAllAnalysis"
@@ -82,9 +82,9 @@
               <v-tab-item>
                 <v-card flat class="commit-chart-window">
                   <commits-and-code-chart
-                    v-for="(repo, index) in rawData"
+                    v-for="(repo, index) in rawData.slice(0, 1)"
                     :key="index"
-                    :repo="repo"
+                    :rawData="rawData"
                     :dates="date"
                     @stopSpiner="isSpiner = false"
                   />
