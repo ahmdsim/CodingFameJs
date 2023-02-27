@@ -38,7 +38,7 @@
             </v-card-text>
             <v-card-actions>
               <v-btn color="secondary" elevation="2" @click="makePersistenceAnalysis">
-                Make a persistance analysis
+                Make a persistence analysis
               </v-btn>
               <div>
                 <router-link to="/"><v-btn color="primary">Back</v-btn></router-link>
@@ -48,19 +48,27 @@
         </v-col>
       </v-row>
     </template>
-    <SurvivalsChart
-      :persistence="persistence"
-    />
+    <div>
+      <GChart
+        v-if="lineChartData && lineChartData.length > 1"
+        style="padding-top: 80px;"
+        type="ColumnChart"
+        :data="lineChartData"
+        :options="lineChartOptions"
+      />
+    </div>
     <router-view/>
   </div>
 </template>
 <script>
 /* eslint-disable */
 import SurvivalsChart from '../components/SurvivalsChart.vue';
+import { GChart } from "vue-google-charts";
 
 export default {
   components: {
     SurvivalsChart,
+    GChart,
   },
   data: () => ({
     dates: ["2019-09-10", "2019-09-20"],
@@ -69,7 +77,18 @@ export default {
     selectedRepoPath: "",
     selectedIgnores: [],
     bef: 0,
-    aft: 0
+    aft: 0,
+    lineChartData: [["Extensions", "Percentage of survival"]],
+    lineChartOptions: {
+      title: 'Persistence',
+      legend: { position: "top" },
+      series: {
+        0: { targetAxisIndex: 0 },
+      },
+      vAxes: {
+        0: { title: "Preservation" },
+      },
+    },
   }),
   async mounted() {
     this.selectedRepoPath = localStorage.getItem("selectedRepoPath");
@@ -89,7 +108,6 @@ export default {
         if (localStorage.getItem("persistenceResult")) {
           this.persistence = JSON.parse(localStorage.getItem("persistenceResult"));
           this.bef = 0;
-          console.log(this.persistence);
           for (var per in this.persistence.before) {
             var person = this.persistence.before[per];
             this.bef += person[".all"];
@@ -100,19 +118,59 @@ export default {
             this.aft += person[".all"];
           }
           clearInterval(persistenceTimer);
-        }
-        this.$axios.$get(`/survival?repo=${this.selectedRepoPath}&after=${this.dates[0]}&before=${this.dates[1]}&date=${this.picker}`).then(function (result) {
-          if (result.data) {
-            console.log(localStorage.getItem("selectedRepoPath"));
-            var persistence = Buffer.from(result.data);
-            persistence = persistence.toString("utf8");
-            persistence = JSON.parse(persistence);
-            persistence.before = JSON.parse(persistence.before);
-            persistence.after = JSON.parse(persistence.after);
-            localStorage.setItem("persistenceResult", JSON.stringify(persistence));
+        } else {
+          this.$axios.$get(`/survival?repo=${this.selectedRepoPath}&after=${this.dates[0]}&before=${this.dates[1]}&date=${this.picker}`).then(function (result) {
+            if (result.data) {
+              var persistence = Buffer.from(result.data);
+              persistence = persistence.toString("utf8");
+              persistence = JSON.parse(persistence);
+              if (persistence.before && persistence.after) {
+                persistence.before = JSON.parse(persistence.before);
+                persistence.after = JSON.parse(persistence.after);
+                localStorage.setItem("persistenceResult", JSON.stringify(persistence));
+              }
+            }
+          });
           }
-        });
       }, 10000);
+    },
+    updateChart: function () {
+      if (this.persistence != null) {
+        var oldExtensions = {};
+        var newExtensions = {};
+        for (var person in this.persistence.before) {
+          for (var ext in this.persistence.before[person]) {
+            if (ext != '.all') {
+              if (ext in oldExtensions) {
+                oldExtensions[ext] += this.persistence.before[person][ext]
+              } else {
+                oldExtensions[ext] = this.persistence.before[person][ext]
+              }
+            }
+          }
+        }
+        for (var person in this.persistence.after) {
+          for (var ext in this.persistence.after[person]) {
+            if (ext != '.all') {
+              if (ext in newExtensions) {
+                newExtensions[ext] += this.persistence.after[person][ext]
+              } else {
+                newExtensions[ext] = this.persistence.after[person][ext]
+              }
+            }
+          }
+        }
+        let extPercent = []
+        for (var ext in oldExtensions) {
+          extPercent.push([ext, (ext in newExtensions ? newExtensions[ext] : 0) / oldExtensions[ext]])
+        }
+        this.lineChartData = this.lineChartData.concat(extPercent)
+      }
+    },
+  },
+  watch: {
+    persistence: function (value) {
+      this.updateChart()
     }
   }
 }
