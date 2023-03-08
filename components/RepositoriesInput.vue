@@ -1,37 +1,33 @@
 <template>
   <div>
     <v-btn
-      class="mb-5"
+      class="mb-4"
       color="primary"
       block
+      text
       @click="addRepository"
-      >
+    >
       <v-icon> mdi-plus </v-icon> Add Repository
     </v-btn>
-    <div class="repo" v-for="(item, index) in repos" :key="index">
-      <v-row>
-        <v-col cols="10">
-          <v-text-field
-            v-model="item.path"
-            label="Repository"
-            @input="item.path = normalize(item.path)"
-          />
-        </v-col>
-        <v-col cols="2">
-          <v-btn
-            v-if="index !== repos.length - 1 || repos.length > 1"
-            class="mx-2"
-            fab
-            x-small
-            color="error"
-            @click="removeRepository(index)"
-          >
-            <v-icon dark>
-              mdi-trash-can
-            </v-icon>
-          </v-btn>
-        </v-col>
-      </v-row>
+    <div v-for="(item, index) in repos" :key="index" class="repo">
+      <v-text-field
+        v-model="item.path"
+        label="Repository"
+        @input="item.path = normalize(item.path)"
+      />
+      <v-btn
+        v-if="index !== repos.length - 1 || repos.length > 1"
+        class="mx-2"
+        fab
+        x-small
+        color="error"
+        text
+        @click="removeRepository(index)"
+      >
+        <v-icon dark>
+          mdi-trash-can
+        </v-icon>
+      </v-btn>
     </div>
   </div>
 </template>
@@ -64,9 +60,16 @@ export default {
   margin: 20px;
 }
 .repo {
-  border: 1px solid #eee;
+  background: #fff;
   margin-bottom: 15px;
   border-radius: 4px;
-  padding: 0 20px;
+  padding: 4px 70px 0 20px;
+  position: relative;
+  box-shadow: 1px 1px 4px #0000000a;
+}
+.repo button {
+  position: absolute;
+  top: 0;
+  right: 10px;
 }
 </style>

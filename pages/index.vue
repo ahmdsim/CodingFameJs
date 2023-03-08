@@ -8,20 +8,32 @@
     <!-- MENU -->
     <ul class="menu">
       <li>
-        <v-btn text>
+        <SaveConfiguration
+          :analyses="analyses"
+          :repos="repos"
+          :date="date"
+          @reloadStorage="reloadAnalysesStorage"
+          @declineAll="declineAllAnalysis"
+        />
+      </li>
+      <li>
+        <v-btn text @click.stop="loadConfigurationDialog = true">
           <v-icon left dark>
             mdi-file-import
           </v-icon>
           Load Configuration
         </v-btn>
-      </li>
-      <li>
-        <v-btn text>
-          <v-icon left dark>
-            mdi-content-save
-          </v-icon>
-          Export Configuration
-        </v-btn>
+        <v-dialog v-model="loadConfigurationDialog" max-width="500px">
+          <v-card>
+            <v-card-title> Load Configuration </v-card-title>
+            <v-card-text>
+              <LoadConfiguration
+                :stored-analyses="storedAnalyses"
+                @selectAnalysis="selectAnalysis"
+              />
+            </v-card-text>
+          </v-card>
+        </v-dialog>
       </li>
       <li>
         <router-link to="/persistence_of_code">
@@ -34,15 +46,13 @@
         </router-link>
       </li>
     </ul>
-
     <v-row>
       <!-- Left dashboard menu-->
       <v-col cols="4" class="aside">
         <v-tabs transparent no-transition vertical>
           <v-tab><v-icon>mdi-source-branch</v-icon></v-tab>
-          <v-tab><v-icon>mdi-filter</v-icon></v-tab>
           <v-tab><v-icon>mdi-file-minus</v-icon></v-tab>
-
+          <!-- Repository Tab -->
           <v-tab-item>
             <div class="repositories-input">
               <RepositoriesInput
@@ -63,29 +73,8 @@
                 @isPersistence="switchPersistence"
               />
             </div>
-            <div class="mt-2">
-              <SaveConfiguration
-                :analyses="analyses"
-                :repos="repos"
-                :date="date"
-                @reloadStorage="reloadAnalysesStorage"
-                @declineAll="declineAllAnalysis"
-              />
-            </div>
-            <LoadConfiguration
-              :stored-analyses="storedAnalyses"
-              @selectAnalysis="selectAnalysis"
-            />
           </v-tab-item>
-
-          <v-tab-item>
-            <DatePicker
-              :date-prop="date"
-              :date-range="dateRange"
-              @changeDate="onChangeDate"
-            />
-          </v-tab-item>
-
+          <!-- Edit ignored files Tab -->
           <v-tab-item>
             <div class="select-repository">
               <v-select
@@ -122,7 +111,40 @@
 
       <!-- Main content-->
       <v-col cols="8" class="dashboard-content">
-        <h1>Results</h1>
+        <h1 class="dashboard-title">
+          Results
+        </h1>
+        <!-- Active Filters-->
+        <div class="filters">
+          <v-chip
+            class="ma-2"
+            color="primary"
+            text-color="white"
+            @click.stop="dateDialog = true"
+          >
+            <v-icon small class="mr-2">
+              mdi-calendar-filter
+            </v-icon>
+            {{ dateRange }}
+          </v-chip>
+          <v-dialog v-model="dateDialog" max-width="500px">
+            <v-card>
+              <v-card-title>Change Date</v-card-title>
+              <v-card-text>
+                <DatePicker
+                  :date-prop="date"
+                  :date-range="dateRange"
+                  @changeDate="onChangeDate"
+                />
+              </v-card-text>
+              <v-card-actions class="pb-5">
+                <v-btn color="primary" elevation="2" @click="dateDialog = false">
+                  Apply Changes
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+        </div>
         <Statistics
           :repos="repos"
           :sorted-authors="sortedAuthors"
@@ -130,7 +152,6 @@
           :ignore-extension-callback="ignoreExtension"
           :is-ignored-callback="isIgnored"
         />
-        <v-divider class="mt-5" />
         <v-row>
           <v-col>
             <div class="mt-3">
@@ -242,10 +263,6 @@
         </v-row>
       </v-col>
     </v-row>
-    <!-- <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/persistence_of_code">Persistence</router-link>
-    </div> -->
     <router-view />
   </div>
 </template>
@@ -318,6 +335,8 @@ export default {
     isImpact: false,
     isPersistence: false,
     alert: true,
+    loadConfigurationDialog: false,
+    dateDialog: false,
   }),
   computed: {
     selectedIgnoredFiles: function () {
@@ -725,8 +744,5 @@ export default {
 .chart-spiner {
   margin: 0 auto;
   width: 70px;
-}
-.dashboard-content {
-  padding: 20px 60px 20px 40px ;
 }
 </style>

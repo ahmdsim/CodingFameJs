@@ -1,45 +1,63 @@
 <template>
   <v-row justify="space-around">
-    <v-col class="scrollable" cols="6">
-      <div class="repositories-list">
-        <v-card
-          v-for="repository in repos"
-          :key="repository.path"
-          class="mb-2"
-          elevation="4"
-        >
-          <v-card-title>{{ repository.path }}</v-card-title>
-          <v-card-text>
-            <div class="commits-count">
-              Commits: {{ repository.commits }}
-            </div>
-            <div class="lines-of-code">
-              Lines of code: +{{ repository.lines.added }} -{{
-                repository.lines.deleted
-              }} Total: {{ repository.lines.added - repository.lines.deleted }}
-            </div>
-          </v-card-text>
-        </v-card>
-        <v-card>
-          <v-card-title>Total</v-card-title>
-          <v-card-text>
-            {{ repos.reduce((a, b) => a + b.commits, 0) }} Commits
-            <br>
-            {{ repos.reduce((a, b) => a + b.lines.added, 0) }}
-            Lines added <br>
-            {{ repos.reduce((a, b) => a + b.lines.deleted, 0) }}
-            Lines deleted <br>
-          </v-card-text>
-        </v-card>
-      </div>
+    <v-col cols="4">
+      <v-card class="stats">
+        <v-card-text>
+          <v-icon>mdi-source-commit</v-icon>
+          <div class="stats-headline">Commits</div>
+          <div class="stats-value">{{ repos.reduce((a, b) => a + b.commits, 0) }}</div>
+        </v-card-text>
+      </v-card>
+    </v-col>
+    <v-col cols="4">
+      <v-card class="stats">
+        <v-card-text>
+          <v-icon>mdi-text-box-plus-outline</v-icon>
+          <div class="stats-headline">Lines added</div>
+          <div class="stats-value">+{{ repos.reduce((a, b) => a + (b.lines.added || 0), 0) }}</div>
+        </v-card-text>
+      </v-card>
+    </v-col>
+    <v-col cols="4">
+      <v-card class="stats">
+        <v-card-text>
+          <v-icon>mdi-text-box-minus-outline</v-icon>
+          <div class="stats-headline">Lines Deleted</div>
+          <div class="stats-value">-{{ repos.reduce((a, b) => a + (b.lines.deleted || 0), 0) }}</div>
+        </v-card-text>
+      </v-card>
     </v-col>
     <v-col cols="6">
-      <div class="author-list">
+      <v-card class="repository-list" flat tile>
+        <v-toolbar elevation="0">
+          <v-toolbar-title><v-icon>mdi-git</v-icon>Repositories</v-toolbar-title>
+        </v-toolbar>
+        <v-list three-line>
+          <template v-for="repository in repos">
+            <v-list-item v-if="repository.path" :key="repository.path">
+              <v-list-item-avatar>
+                <v-icon>mdi-source-branch</v-icon>
+              </v-list-item-avatar>
+              <v-list-item-content>
+                <v-list-item-title>{{ repository.path }}</v-list-item-title>
+                <v-list-item-subtitle>
+                  Commits: {{ repository.commits }}<br>
+                  Lines of code: +{{ repository.lines.added }} -{{
+                    repository.lines.deleted
+                  }} Total: {{ repository.lines.added - repository.lines.deleted }}
+                </v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>
+          </template>
+        </v-list>
+      </v-card>
+    </v-col>
+    <v-col cols="6">
+      <div>
         <v-dialog
           v-model="overlay"
           width="700px"
           max-height="600px;"
-          scrollable
           persistent
           class="dialog-window"
         >
@@ -73,7 +91,9 @@
                     </v-icon>
                   </template>
                   <template #label="{ item }">
-                    <div v-if="item.hash || item.commits">{{ item.name }}</div>
+                    <div v-if="item.hash || item.commits">
+                      {{ item.name }}
+                    </div>
                     <div v-else>
                       <span v-if="isIgnoredCallback(item.name, item.repopath)" class="ignored-files">{{ item.name }}</span>
                       <span v-else>{{ item.name }}</span>
@@ -98,14 +118,9 @@
             </v-card-text>
           </v-card>
         </v-dialog>
-        <v-card
-          class="mx-auto"
-        >
-          <v-toolbar
-            color="primary"
-            dark
-          >
-            <v-toolbar-title>Top authors</v-toolbar-title>
+        <v-card class="author-list" flat tile>
+          <v-toolbar elevation="0">
+            <v-toolbar-title><v-icon>mdi-account-group</v-icon>Top Authors</v-toolbar-title>
             <v-spacer />
           </v-toolbar>
           <v-list three-line class="top-authors-toolbar">
@@ -116,34 +131,28 @@
               no-action
             >
               <template #activator>
+                <v-list-item-avatar>
+                  <v-icon>mdi-account-outline</v-icon>
+                </v-list-item-avatar>
                 <v-list-item-content>
                   <v-list-item-title>{{ author.email }}</v-list-item-title>
-                  Commits: {{ author.commits }} <br> LoC: +{{ author.lines.added }} -{{
-                    author.lines.deleted }} T: {{ author.lines.added - author.lines.deleted }}
+                  <v-list-item-subtitle>
+                    Commits: {{ author.commits }} <br> LoC: +{{ author.lines.added }} -{{
+                      author.lines.deleted }} T: {{ author.lines.added - author.lines.deleted }}
+                  </v-list-item-subtitle>
                 </v-list-item-content>
               </template>
               <v-list-item
                 v-for="(commit, index) in author.details"
                 :key="commit[0]"
                 class="commit-info"
-                :class="{oddCommit: index % 2 == 0}"
+                :class="{oddCommit: index % 2 != 0}"
                 @click="overlay = true"
               >
-                <v-tooltip bottom>
-                  <template #activator="{ on, attrs }">
-                    <span
-                      v-if="index % 2 == 0"
-                      v-bind="attrs"
-                      v-on="on"
-                    >{{ commit[1] }} LoC: {{ commit[2][0] }} -{{ commit[2][1] }} T: {{ commit[2][0] - commit[2][1] }}</span>
-                    <span
-                      v-else
-                      v-bind="attrs"
-                      v-on="on"
-                    >{{ commit[1] }} LoC: {{ commit[2][0] }} -{{ commit[2][1] }} T: {{ commit[2][0] - commit[2][1] }}</span>
-                  </template>
-                  <span><h3>hash:</h3> {{ commit[0] }}</span>
-                </v-tooltip>
+                <v-list-item-title><v-icon>mdi-source-commit</v-icon> {{ commit[0].slice(0, 7) }}</v-list-item-title>
+                <v-list-item-subtitle>
+                  {{ commit[1] }} LoC: +{{ commit[2][0] }} -{{ commit[2][1] }} T: {{ commit[2][0] - commit[2][1] }}
+                </v-list-item-subtitle>
               </v-list-item>
             </v-list-group>
           </v-list>
@@ -197,11 +206,13 @@ export default {
 }
 </script>
 <style scoped>
-.scrollable {
-  max-height: 500px;
-  overflow-y: auto;
-}
 .author-list .v-list{
+  height: 410px;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.repository-list .v-list{
   height: 410px;
   overflow-y: auto;
 }
@@ -209,7 +220,7 @@ export default {
   padding: 0 !important;
 }
 .oddCommit {
-  background-color: #F5F5F5;
+  background-color: #f3f8ff;
 }
 .dialog-window {
   padding-top: 16px !important;
@@ -235,5 +246,23 @@ export default {
 }
 .commit-info {
   min-height: 36px;
+}
+.blue-card {
+  background-color: #1976d2 ;
+  box-shadow: none !important;
+}
+
+.green-card {
+  background-color: #00d0ff;
+  box-shadow: none !important;
+}
+
+.red-card {
+  background-color: #00d0ff;
+  box-shadow: none !important;
+}
+
+.white--text {
+  color: white;
 }
 </style>
