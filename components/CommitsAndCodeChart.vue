@@ -41,9 +41,10 @@ export default {
         },
         vAxes: {
           // Adds titles to each axis.
-          0: { title: "Commits" },
-          1: { title: "Changes" },
+          0: { title: "Commits", baseline: 0, },
+          1: { title: "Changes", baseline: 0, },
         },
+        height: 300,
       },
       lineChartData: [["Day", "Commits", "Changes"]],
     };
@@ -86,7 +87,7 @@ export default {
         for (let index = 0; index < dates.length; index++) {
           const date = dates[index];
           const dateKey = date.toISOString().substring(0, 10);
-          this.lineChartData.push([date, commits[dateKey], lines[dateKey]]);
+          this.lineChartData.push([date, commits[dateKey] ?? 0, lines[dateKey] ?? 0]);
         }
       } else {
         var amountOfDates = dates.length < 120 ? 15 : 30;

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-row justify="center">
+    <v-row align="center" justify="center">
       <v-btn fab dark color="primary" small @click="dateDiff">
         <v-icon> mdi-arrow-left </v-icon>
       </v-btn>

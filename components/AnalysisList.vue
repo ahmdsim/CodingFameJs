@@ -2,54 +2,49 @@
   <div>
     <v-menu offset-y>
       <template #activator="{ on, attrs }">
-        <v-btn-toggle class="analize-button">
-          <v-btn active-class="" color="secondary" elevation="2" @click="analize">
-            Analize
+        <v-item-group class="button-group">
+          <v-btn
+            large
+            class="analyze-button"
+            color="primary"
+            elevation="2"
+            @click="analize"
+          >
+            <v-icon>mdi-google-analytics</v-icon>
+            Analyze
           </v-btn>
           <v-btn
-            color="secondary"
-            dark
+            large
+            color="primary"
             v-bind="attrs"
             elevation="2"
+            class="no-margin"
             v-on="on"
           >
             <v-icon color="white">
               mdi-chevron-down
             </v-icon>
           </v-btn>
-          <v-checkbox
-            v-model="includeImpact"
-            label="Time consuming"
-          />
-        </v-btn-toggle>
+        </v-item-group>
       </template>
       <v-list min-width="200px">
         <v-list-item class="text-right">
           <span v-if="analyses.length == 0">
             No analyses
           </span>
-          <v-tooltip bottom>
-            <template #activator="{ on, attrs }">
-              <span
-                v-bind="attrs"
-                v-on="on"
-              >
-                <v-btn
-                  absolute
-                  right
-                  x-small
-                  color="error"
-                  class="clear-button"
-                  @click="deleteAll"
-                >
-                  <v-icon x-small>
-                    mdi-cancel
-                  </v-icon>
-                </v-btn>
-              </span>
-            </template>
-            <span>Are you sure? All analyzes will be deleted</span>
-          </v-tooltip>
+          <v-btn
+            v-else
+            text
+            block
+            color="error"
+            class="clear-button"
+            @click="deleteAll"
+          >
+            <v-icon small>
+              mdi-cancel
+            </v-icon>
+            Delete All Analyses
+          </v-btn>
         </v-list-item>
         <v-list-item
           v-for="(item, index) in analyses"
@@ -82,11 +77,6 @@
       v-model="includeImpact"
       label="Time consuming"
     />
-    <router-link to="/persistence_of_code">
-      <v-btn class="primary">
-        Persistence
-      </v-btn>
-    </router-link>
     <!-- <v-checkbox
       v-model="includePersistence"
       label="Persistence of code"
@@ -144,16 +134,33 @@ export default {
 }
 </script>
 <style scoped>
-.analize-button {
-  background-color: gray;
-}
-.clear-button {
-  top: 13px;
-}
-.v-btn-toggle > .v-btn.v-btn--active {
-  background-color: #424242 !important;
+.analyze-button {
+  width: calc( 100% - 78px );
+  margin: 0 !important;
 }
 .persistence-checkbox {
   margin: 0px;
+}
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.button-group > .v-btn {
+  margin: 5px;
+  border-radius: 0;
+}
+
+.button-group > .v-btn:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.button-group > .v-btn:last-child {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+.no-margin {
+  margin: 0 !important;
 }
 </style>

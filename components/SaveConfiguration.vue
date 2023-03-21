@@ -1,11 +1,17 @@
 <template>
   <div>
     <v-item-group>
-      <v-btn color="primary" elevation="2" @click.stop="saveAnalyses">
-        Save analyses
+      <v-btn text @click.stop="saveAnalyses">
+        <v-icon left dark>
+          mdi-content-save
+        </v-icon>
+        Save Analysis
       </v-btn>
-      <v-btn color="primary" elevation="2" @click.stop="dialog = true">
-        Export configuration
+      <v-btn text @click.stop="dialog = true">
+        <v-icon left dark>
+          mdi-export
+        </v-icon>
+        Export Configuration
       </v-btn>
       <v-dialog v-model="dialog" max-width="500px">
         <v-card>
@@ -20,6 +26,13 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
+      <v-snackbar
+        v-model="snackbar"
+        :timeout="1500"
+        color="success"
+      >
+        The analysis has been saved.
+      </v-snackbar>
     </v-item-group>
   </div>
 </template>
@@ -31,6 +44,7 @@ export default {
   data: () => ({
     fileName: "",
     dialog: false,
+    snackbar: false,
   }),
   props: {
     analyses: {
@@ -60,6 +74,7 @@ export default {
       }
       this.$emit('declineAll')
       this.$emit('reloadStorage')
+      this.snackbar = true;
     },
     exportConfiguration: function () {
       var configuration = {date: this.date, repos: this.repos.map((repo) => ({path: repo.path, ignores: repo.ignoredFiles}))}
