@@ -33,6 +33,7 @@ export default {
     { path: '/extensions', handler: '~/api/extensions.js' },
     { path: '/advancedgitblame', handler: '~/api/advancedgitblame.js' },
     {path: '/survival', handler: '~/api/survival'},
+    { path: '/existence', handler: '~/api/existence'}
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components

@@ -13,7 +13,7 @@
       <v-text-field
         v-model="item.path"
         label="Repository"
-        @input="item.path = normalize(item.path)"
+        @input="updatePath(index, normalize(item.path))"
       />
       <v-btn
         v-if="index !== repos.length - 1 || repos.length > 1"
@@ -28,6 +28,13 @@
           mdi-trash-can
         </v-icon>
       </v-btn>
+      <v-alert
+        v-if="unexrepos.indexOf(index) != -1"
+        class="unexistence-alert"
+        color="warning"
+      >
+        This repo doesn't exist
+      </v-alert>
     </div>
   </div>
 </template>
@@ -41,6 +48,9 @@ export default {
         default: () => []
       }
     },
+    data: () => ({
+      unexrepos: []
+    }),
     methods: {
       normalize: function (str) {
         str = normalize(str);
@@ -52,7 +62,22 @@ export default {
       removeRepository: function (index) {
         this.$emit("removeRepository", {index: index});
       },
-    }
+      updatePath: async function (index, path) {
+        this.repos[index].path = path
+        let existence = await this.$axios.$get(
+          `/existence?path=${escape(path)}`
+        );
+        if (!existence) {
+          if (this.unexrepos.indexOf(index) == -1) {
+            this.unexrepos.push(index)
+          }
+        } else {
+          if (this.unexrepos.indexOf(index) != -1) {
+            this.unexrepos.splice(this.unexrepos.indexOf(index), 1)
+          }
+        }
+      }
+    },
 }
 </script>
 <style scoped>
