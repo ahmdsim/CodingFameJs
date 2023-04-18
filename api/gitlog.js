@@ -63,10 +63,10 @@ export default function (req, res, _) {
           return p + n.deleted
         }
       }, 0)
-    }
-    parsedCommits.push({date: commit.date, stat: [{added: added, deleted: deleted}]})
-    if (output.authors[commit.author.email] && output.authors[commit.author.email] != null) {
-      if (commit.stat.length > 0) {
+
+      parsedCommits.push({date: commit.date, stat: [{added: added, deleted: deleted}]})
+
+      if (output.authors[commit.author.email] && output.authors[commit.author.email] != null) {
         output.authors[commit.author.email].lines.added += added;
         output.authors[commit.author.email].lines.deleted += deleted;
 
@@ -77,24 +77,24 @@ export default function (req, res, _) {
           commit.stat.filter((info) => !(fileExcluded(info["filepath"]))),
           repo
         ])
-      }
-      output.authors[commit.author.email].commits += 1
-    } else {
-      output.authors[commit.author.email] = {
-        lines: {
-          added: added,
-          deleted: deleted
-        },
-        commits: 1,
-        details: [
-          [
-            commit.sha,
-            commit.date.toISOString().substring(0, 10),
-            [added, deleted],
-            commit.stat.filter((info) => !(fileExcluded(info["filepath"]))),
-            repo
+        output.authors[commit.author.email].commits += 1
+      } else {
+        output.authors[commit.author.email] = {
+          lines: {
+            added: added,
+            deleted: deleted
+          },
+          commits: 1,
+          details: [
+            [
+              commit.sha,
+              commit.date.toISOString().substring(0, 10),
+              [added, deleted],
+              commit.stat.filter((info) => !(fileExcluded(info["filepath"]))),
+              repo
+            ]
           ]
-        ]
+        }
       }
     }
   })
