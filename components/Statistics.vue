@@ -59,6 +59,7 @@
           width="700px"
           max-height="600px;"
           persistent
+          scrollable
           class="dialog-window"
         >
           <v-card max-height="600px" class="tree-card">
