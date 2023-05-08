@@ -57,67 +57,53 @@
         <v-dialog
           v-model="overlay"
           width="700px"
-          max-height="600px;"
+          max-height="700px;"
           persistent
           scrollable
           class="dialog-window"
         >
-          <v-card max-height="600px" class="tree-card">
-            <v-card-text max-height="600px">
-              <div>
-                <div class="close-icon">
-                  <v-icon class="close-box" @click="overlay=false">
-                    mdi-close-box
-                  </v-icon>
-                </div>
-                <v-treeview
-                  v-if="authors.length > 0"
-                  :items="authors"
-                  item-key="id"
-                  open-on-click
-                  hoverable
-                  dense
-                  transition
-                  activatable
-                >
-                  <template #prepend="{ item }">
-                    <v-icon v-if="item.hash">
-                      mdi-source-commit
-                    </v-icon>
-                    <v-icon v-else-if="item.commits">
-                      mdi-account
-                    </v-icon>
-                    <v-icon v-else>
-                      mdi-file-document
-                    </v-icon>
-                  </template>
-                  <template #label="{ item }">
-                    <div v-if="item.hash || item.commits">
-                      {{ item.name }}
-                    </div>
-                    <div v-else>
-                      <span v-if="isIgnoredCallback(item.name, item.repopath)" class="ignored-files">{{ item.name }}</span>
-                      <span v-else>{{ item.name }}</span>
-                    </div>
-                  </template>
-                  <template #append="{ item }">
-                    <div v-if="!item.hash && !item.commits">
-                      {{ item.LoC }}
-                      <v-icon @click="ignoreFileCallback(item.repopath + '/' + item.name, item.repopath)">
-                        mdi-file-document-remove
-                      </v-icon>
-                      <v-icon @click="ignoreFileCallback(item.repopath + '/' + item.name.split('/').slice(0, -1).join(`/`), item.repopath, true)">
-                        mdi-folder-remove
-                      </v-icon>
-                      <v-btn text class="ignore-ext-btn" @click="ignoreExtensionCallback(item.repopath, item.name.split('.').pop())">
-                        .ext
-                      </v-btn>
-                    </div>
-                  </template>
-                </v-treeview>
-              </div>
-            </v-card-text>
-          </v-card>
+        <v-card
+          height="700px"
+        >
+          <div class="close-icon">
+            <v-icon class="close-box" @click="overlay=false;">
+              mdi-close-box
+            </v-icon>
+          </div>
+          <v-list three-line>
+            <v-list-group
+              v-for="author in sortedAuthors"
+              :key="author.email"
+              v-model="author.active"
+            >
+              <template #activator>
+                <v-list-item-avatar>
+                  <v-icon>mdi-account-outline</v-icon>
+                </v-list-item-avatar>
+                <v-list-item-content>
+                  <v-list-item-title>{{ author.email }}</v-list-item-title>
+                  <v-list-item-subtitle>
+                    Commits: {{ author.commits }} <br> LoC: +{{ author.lines.added }} -{{
+                      author.lines.deleted }} T: {{ author.lines.added - author.lines.deleted }}
+                  </v-list-item-subtitle>
+                </v-list-item-content>
+              </template>
+              <v-list-item
+                v-for="(commit, index) in author.details"
+                v-bind:id="[author.email.replace(/@|\./g, ''), index].join('_')"
+                :key="commit[0]"
+                class="commit-info"
+                :class="{oddCommit: index % 2 != 0, isActive: [author.email.replace(/@|\./g, ''), index].join('_') == activeNod}"
+                @click="activeCommit(index, author)"
+              >
+                <v-list-item-title><v-icon>mdi-source-commit</v-icon> {{ commit[0].slice(0, 7) }}</v-list-item-title>
+                <v-list-item-subtitle>
+                  {{ commit[1] }} LoC: +{{ commit[2][0] }} -{{ commit[2][1] }} T: {{ commit[2][0] - commit[2][1] }}
+                </v-list-item-subtitle>
+              </v-list-item>
+            </v-list-group>
+          </v-list>
+        </v-card>
         </v-dialog>
         <v-card class="author-list" flat tile>
           <v-toolbar elevation="0">
@@ -148,7 +134,7 @@
                 :key="commit[0]"
                 class="commit-info"
                 :class="{oddCommit: index % 2 != 0}"
-                @click="overlay = true"
+                @click="openList(index, author);"
               >
                 <v-list-item-title><v-icon>mdi-source-commit</v-icon> {{ commit[0].slice(0, 7) }}</v-list-item-title>
                 <v-list-item-subtitle>
@@ -167,6 +153,7 @@
 export default {
   data: () => ({
     overlay: false,
+    activeNod: ''
   }),
   props: {
     repos: {
@@ -203,7 +190,21 @@ export default {
       })
       return authors
     }
-  }
+  },
+  methods: {
+    openList: function (index, author) {
+      this.overlay = true
+
+      this.$nextTick(() => {
+        document.getElementById([author.email.replace(/@|\./g, ''), index].join('_')).scrollIntoView(true);
+      })
+
+      this.activateCommit(index, author)
+    },
+    activateCommit: function (index, author) {
+      this.activeNod = [author.email.replace(/@|\./g, ''), index].join('_')
+    },
+  },
 }
 </script>
 <style scoped>
@@ -231,6 +232,8 @@ export default {
 }
 .close-icon {
   text-align:left;
+  margin-right: 12px;
+  margin-top:12px;
 }
 .close-box {
   float:right;
@@ -265,5 +268,8 @@ export default {
 
 .white--text {
   color: white;
+}
+.isActive {
+  background-color: #1866c03d;
 }
 </style>
