@@ -1,7 +1,7 @@
 <template>
   <div>
     <GChart
-      v-if="rawData.length > 0"
+      v-if="Object.values(rawData).length > 0"
       type="ColumnChart"
       :data="lineChartData"
       :options="lineChartOptions"
@@ -22,7 +22,7 @@ export default {
       type: String,
     },
     rawData: {
-      type: Array,
+      type: Object,
       default: () => {},
     },
     dates: {
@@ -64,11 +64,11 @@ export default {
       if (includeEndDate) dates.push(endDate);
       return dates;
     },
-
     createChartForDates() {
       const commits = {};
       const lines = {};
-      this.rawData.forEach((repo) => {
+      this.lineChartData = [["Day", "Commits", "Changes"]]
+      Object.values(this.rawData).forEach((repo) => {
         repo.forEach((commit) => {
         var date = new Date(commit.date);
         var dateKey = date.toISOString().substring(0, 10);
@@ -111,5 +111,11 @@ export default {
       }
     },
   },
+  watch: {
+    rawData: function (value) {
+      this.createChartForDates()
+      this.$emit('stopSpiner');
+    }
+  }
 };
 </script>
