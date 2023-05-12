@@ -244,6 +244,8 @@ export default async function (req, res, _) {
         let fileData = fs.readFileSync(path, {encoding: 'utf8', flag: 'r'})
         output = fileData
         break
+      } else {
+        res.write(`${path} path does not exist`)
       }
       // console.log(p == 10 && output.length == 0 && !existenceFlag)
       // console.log(existenceFlag)
@@ -261,7 +263,9 @@ export default async function (req, res, _) {
       if (erro) {
         // console.log(erro)
       }
-    })})
+    });
+      res.write(JSON.stringify(err))
+  })
 
   res.write(JSON.stringify(output))
   res.end()
