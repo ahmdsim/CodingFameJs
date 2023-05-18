@@ -176,8 +176,6 @@
                   <v-tab-item>
                     <v-card flat class="commit-chart-window">
                       <commits-and-code-chart
-                        v-for="(repo, index) in rawData.slice(0, 1)"
-                        :key="index"
                         :rawData="rawData"
                         :dates="date"
                         @stopSpiner="isSpiner = false"
@@ -322,7 +320,7 @@ export default {
     authors: [],
     files: [],
     repos: [],
-    rawData: [],
+    rawData: {},
     lastCommits: [],
     isSpiner: false,
     windowLength: 2,
@@ -490,7 +488,7 @@ export default {
     analize: async function () {
       this.isSpiner = true;
       this.authors = [];
-      this.rawData = [];
+      this.rawData = {};
       let analysis = { rawData: [], authors: [] };
       this.repos.forEach(async (repository) => {
         if (repository.path === "") {
@@ -514,7 +512,9 @@ export default {
         );
 
         analysis.rawData.push(rawData);
-        this.rawData.push(rawData);
+        var protoRawData = {}
+        protoRawData[repository.path] = rawData
+        this.rawData = Object.assign({}, this.rawData, protoRawData)
         const authors = [];
         for (const [key, value] of Object.entries(gitlog["authors"])) {
           if (this.authors.find((x) => x.email === key)) {
