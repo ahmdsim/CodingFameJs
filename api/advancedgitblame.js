@@ -77,7 +77,7 @@ export default async function (req, res, _) {
     return
   }
 
-  const chartQueue = new Queue('gitblame-queue', 'redis://127.0.0.1:6379');
+  const chartQueue = new Queue('gitblame-queue', 'redis://redis:6379');
 
   chartQueue.process(async function (job, done) {
     // let writer = fs.createWriteStream(`analyses/${jobHash}`) 
