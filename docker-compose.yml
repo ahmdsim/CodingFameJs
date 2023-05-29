@@ -24,6 +24,13 @@ services:
     depends_on:
         - nuxt-app
     restart: unless-stopped
+  redis:
+    container_name: redis
+    image: 'bitnami/redis:latest'
+    environment:
+    - ALLOW_EMPTY_PASSWORD=yes
+    networks:
+    - nuxt-network
 
 networks:
   nuxt-network:
