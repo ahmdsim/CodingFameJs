@@ -3,6 +3,7 @@ FROM node:latest
 RUN apt-get install git
 RUN mkdir -p /var/www/dockerize-nuxt/nuxt-app
 WORKDIR /var/www/dockerize-nuxt/nuxt-app
+RUN git config --global --add safe.directory '*'
 
 COPY package*.json ./
 RUN npm install

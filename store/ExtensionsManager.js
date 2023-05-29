@@ -1,6 +1,6 @@
 /* eslint-disable */
 
-function extractFiles (file) {
+function extractFiles(file) {
   if (file["children"].length === 0) {
     return [file.path]
   } else {
@@ -23,22 +23,22 @@ export const state = () => ({
 })
 
 export const getters = {
-  getImpact (state) {
+  getImpact(state) {
     return state.impact
   },
-  getPieDatas (state) {
+  getPieDatas(state) {
     return state.pieDatas
   },
-  getMainPieData (state) {
+  getMainPieData(state) {
     return state.mainPieData
   },
-  getPersonalImpact (state) {
+  getPersonalImpact(state) {
     return state.personalImpact
   }
 }
 
 export const mutations = {
-  updateRepoData (state, payload) {
+  updateRepoData(state, payload) {
     state.repopath = payload.repopath
     state.ignores = payload.ignores
 
@@ -46,7 +46,7 @@ export const mutations = {
     let extensions = new Set(extractedFiles)
     state.extensions = Array.from(extensions)
   },
-  setImpact (state, payload) {
+  setImpact(state, payload) {
     state.impact = payload.impact
     const pieLimit = 0.05
 
@@ -73,12 +73,12 @@ export const mutations = {
         if (ext == '.all') {
           state.personalImpact = currentExtension
         } else {
-          state.pieDatas.push({ext: ext, pieData: currentExtension})
+          state.pieDatas.push({ ext: ext, pieData: currentExtension })
           mainExtensions.push([ext, rex])
         }
       } else {
         other += rex
-      }      
+      }
     })
     mainExtensions.push(['other', other])
     state.mainPieData = mainExtensions
@@ -87,18 +87,22 @@ export const mutations = {
 
 export const actions = {
   async reloadImpact({ state, commit }) {
-    let impact = {analysis: {}}
-      var impactTimer = setInterval(() => {
-        this.$axios.$get(
-          `/advancedgitblame?repopath=${escape(state.repopath)}&ignores=${state.ignores.join(',')}`
-          ).then(function (data) {
-            impact = JSON.parse(data)
-            impact.analysis = JSON.parse(impact.analysis)
-            commit('setImpact', {impact: impact.analysis})
-            if (impact.progress && impact.progress == 100) {
-              clearInterval(impactTimer)
-        }
+    let impact = { analysis: {} }
+    var request = () => {
+      this.$axios.$get(
+        `/advancedgitblame?repopath=${escape(state.repopath)}&ignores=${state.ignores.join(',')}`
+      ).then(function (data) {
+        impact = JSON.parse(data)
+        impact.analysis = JSON.parse(impact.analysis)
+        commit('setImpact', { impact: impact.analysis })
+        if (impact.progress != 100) {
+          setTimeout(request, 10000)
+        } 
+      }).catch(function (error) {
+        console.log(error);
+        setTimeout(request, 10000);
       })
-    }, 10000) 
+    };
+    setTimeout(request, 10000);
   }
 }

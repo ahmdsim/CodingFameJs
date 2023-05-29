@@ -9,7 +9,7 @@ const hash = require('object-hash')
 function fileExcluded(filepath, ignores) {
   for (let i = 0; i < ignores.length; i++) {
     const ignorePattern = ignores[i]
-    if (minimatch(filepath, ignorePattern, { matchBase: true })) {
+    if (filepath.includes("/.git") || minimatch(filepath, ignorePattern, { matchBase: true })) {
       return true
     }
   }
@@ -78,6 +78,7 @@ export default async function (req, res, _) {
   }
 
   const chartQueue = new Queue('gitblame-queue', 'redis://redis:6379');
+  console.log('chartQueue', chartQueue);
 
   chartQueue.process(async function (job, done) {
     // let writer = fs.createWriteStream(`analyses/${jobHash}`) 
@@ -97,13 +98,15 @@ export default async function (req, res, _) {
     //     console.log(err)
     //   }
     // });
+    console.log('files.length', files.length);
 
     const blamejs = new BlameJS();   
     let authors = new Map();
     var step = (files.length - files.length % 10) / 10;
-
+    
     for (let i = 0; i < files.length; i++) {
       let file = files[i]
+      console.log('file', file);
       let dirpath = file.split('/');
       const filename = dirpath.pop();
       dirpath = dirpath.join('/');
@@ -245,7 +248,7 @@ export default async function (req, res, _) {
         output = fileData
         break
       } else {
-        res.write(`${path} path does not exist`)
+        console.log(`${path} path does not exist`)
       }
       // console.log(p == 10 && output.length == 0 && !existenceFlag)
       // console.log(existenceFlag)
@@ -261,10 +264,10 @@ export default async function (req, res, _) {
   chartQueue.on('error', (err) => {
     fs.writeFile(`analyses/${jobHash}_error`, JSON.stringify(err), (erro) => {
       if (erro) {
-        // console.log(erro)
+        console.log(erro)
       }
     });
-      res.write(JSON.stringify(err))
+      console.log(err);
   })
 
   res.write(JSON.stringify(output))
