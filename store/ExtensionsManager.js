@@ -20,6 +20,7 @@ export const state = () => ({
   mainPieData: [],
   personalImpact: [],
   ignores: [],
+  fromDate: ''
 })
 
 export const getters = {
@@ -41,6 +42,7 @@ export const mutations = {
   updateRepoData(state, payload) {
     state.repopath = payload.repopath
     state.ignores = payload.ignores
+    state.fromDate = payload.fromDate
 
     let extractedFiles = payload.repotree.map((file) => (extractFiles(file))).reduce((p, c) => p.concat(c), []).map((file) => file.split('.').pop())
     let extensions = new Set(extractedFiles)
@@ -90,7 +92,7 @@ export const actions = {
     let impact = { analysis: {} }
     var request = () => {
       this.$axios.$get(
-        `/advancedgitblame?repopath=${escape(state.repopath)}&ignores=${state.ignores.join(',')}`
+        `/advancedgitblame?repopath=${escape(state.repopath)}&ignores=${state.ignores.join(',')}&fromDate=${state.fromDate}`
       ).then(function (data) {
         impact = JSON.parse(data)
         impact.analysis = JSON.parse(impact.analysis)
