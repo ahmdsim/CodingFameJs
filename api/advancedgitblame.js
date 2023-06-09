@@ -77,7 +77,7 @@ export default async function (req, res, _) {
     return
   }
 
-  const chartQueue = new Queue('gitblame-queue', 'redis://redis:6379');
+  const chartQueue = new Queue('gitblame-queue', 'redis://127.0.0.1:6379');
   console.log('chartQueue', chartQueue);
 
   chartQueue.process(async function (job, done) {
@@ -119,17 +119,19 @@ export default async function (req, res, _) {
 
       for (let ind in lineData) {
         let author = commitData[lineData[ind].hash]["authorMail"];
+        let newLine = job.data.fromDate ? commitData[lineData[ind].hash]["authorTime"] >= new Date(job.data.fromDate).getTime() / 1000 ? 1 : 0 : 1;
+
         if (authors.get(author)) {
           if (authors.get(author).get(ext)) {
-              authors.get(author).set(ext, authors.get(author).get(ext) + 1)
+              authors.get(author).set(ext, authors.get(author).get(ext) + newLine)
           } else {
-              authors.get(author).set(ext, 1)
+              authors.get(author).set(ext, newLine)
           }
-          authors.get(author).set('.all', authors.get(author).get('.all') + 1)
+          authors.get(author).set('.all', authors.get(author).get('.all') + newLine)
         } else {
           let newAuthor = new Map()
-          newAuthor.set(ext, 1)
-          newAuthor.set('.all', 1)
+          newAuthor.set(ext, newLine)
+          newAuthor.set('.all', newLine)
           authors.set(author, newAuthor)
         }
       }
@@ -197,7 +199,8 @@ export default async function (req, res, _) {
 
   let jobData = {
     repopath: url.searchParams.get('repopath'),
-    ignores: url.searchParams.get('ignores') ? url.searchParams.get('ignores').split(',') : []
+    ignores: url.searchParams.get('ignores') ? url.searchParams.get('ignores').split(',') : [],
+    fromDate: url.searchParams.get('fromDate') ? url.searchParams.get('fromDate') : ''
   }
 
   var jobHash = hash(jobData)

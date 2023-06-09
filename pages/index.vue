@@ -580,6 +580,7 @@ export default {
         repopath: this.selectedRepoPath,
         repotree: this.selectedRepoTree,
         ignores: this.selectedIgnoredFiles,
+        fromDate: this.date[0]
       });
       this.reloadImpact();
       this.alert = false;
