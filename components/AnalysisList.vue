@@ -75,7 +75,7 @@
     </v-text-field>
     <v-checkbox
       v-model="includeImpact"
-      label="Time consuming"
+      label="Include the time report"
     />
     <!-- <v-checkbox
       v-model="includePersistence"

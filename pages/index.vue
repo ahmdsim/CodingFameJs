@@ -172,10 +172,21 @@
                     </v-tabs>
                   </client-only>
                 </template>
-                <v-tabs-items v-model="tab">
+                <template>
+                  <v-window
+                    v-model="window"
+                    show-arrows
+                  >
+                    <v-window-item
+                      v-for="(repo, index) in repos"
+                      :key="index"
+                    >
+                    <h3 style="text-align: center;">{{ repo.path }}</h3>
+                    <v-tabs-items v-model="tab">
                   <v-tab-item>
                     <v-card flat class="commit-chart-window">
                       <commits-and-code-chart
+                        :path="repo.path"
                         :rawData="rawData"
                         :dates="date"
                         @stopSpiner="isSpiner = false"
@@ -200,7 +211,7 @@
                     <v-card flat>
                       <FileExtensionsChart
                         v-if="!isSpinerExtensions"
-                        :pieData="mainPieData"
+                        :pieData="mainPieData[repo.path]"
                         @stopSpinerExtensions="isSpinerExtensions = false"
                       />
                       <template>
@@ -219,13 +230,13 @@
                                 calculations that will not end
                               </v-col>
                               <v-col cols="2">
-                                <v-btn @click="useExtensionsManager">
+                                <v-btn @click="useExtensionsManager(repo)">
                                   Anyway analize
                                 </v-btn>
                               </v-col>
                             </v-row>
                           </v-alert>
-                          <v-btn v-if="!alert" @click="useExtensionsManager">
+                          <v-btn v-if="!alert" @click="useExtensionsManager(repo)">
                             Make analysis
                           </v-btn>
                         </div>
@@ -243,9 +254,9 @@
                   <v-tab-item v-if="isImpact">
                     <v-card flat>
                       <ImpactCharts
-                        :pieDatas="pieDatas"
-                        :personalImpact="personalImpact"
-                        :extensions="mainPieData"
+                        :pieDatas="pieDatas[repo.path]"
+                        :personalImpact="personalImpact[repo.path]"
+                        :extensions="mainPieData[repo.path]"
                       />
                     </v-card>
                   </v-tab-item>
@@ -255,6 +266,9 @@
                     </v-card>
                   </v-tab-item>
                 </v-tabs-items>
+                    </v-window-item>
+                  </v-window>
+                </template>
               </v-card>
             </div>
           </v-col>
@@ -335,6 +349,10 @@ export default {
     alert: true,
     loadConfigurationDialog: false,
     dateDialog: false,
+    window: 0,
+    pieDataRepos: {},
+    mainPieDatasRepos: {},
+    personalImpactRepos: {},
   }),
   computed: {
     selectedIgnoredFiles: function () {
@@ -378,13 +396,16 @@ export default {
       return this.getImpact();
     },
     personalImpact: function () {
-      return this.getPersonalImpact();
+      this.reloadCandCData()
+      return this.personalImpactRepos;
     },
     pieDatas: function () {
-      return this.getPieDatas();
+      this.reloadCandCData()
+      return this.pieDataRepos;
     },
     mainPieData: function () {
-      return [["Type of files", "Lines of code"]].concat(this.getMainData());
+      this.reloadCandCData()
+      return this.mainPieDatasRepos;
     },
   },
   async mounted() {
@@ -485,6 +506,11 @@ export default {
         }
       }
     },
+    reloadCandCData: function () {
+      this.personalImpactRepos[this.getPersonalImpact()['repopath']] = this.getPersonalImpact()['personalImpact']
+      this.pieDataRepos[this.getPieDatas()['repopath']] = this.getPieDatas()['pieDatas']
+      this.mainPieDatasRepos[this.getMainData()['repopath']] = [["Type of files", "Lines of code"]].concat(this.getMainData()['mainPieData']);
+    },
     analize: async function () {
       this.isSpiner = true;
       this.authors = [];
@@ -539,9 +565,11 @@ export default {
         const fileTree = await this.$axios.$get(
           `/tree?repo=${escape(repository.path)}`
         );
+
         repository.commits = gitlog.commits;
         repository.lines = gitlog.lines;
         repository.authors = authors;
+        repository.tree = fileTree;
         analysis.authors = analysis.authors.concat(
           authors.filter((author) => !analysis.authors.includes(author))
         );
@@ -574,14 +602,15 @@ export default {
         localStorage.hasData = 0;
       }
     },
-    useExtensionsManager: function () {
-      // if (this.selectedIgnoredFiles && this.selectedIgnoredFiles != [] || this.alert) {
-      this.updateRepoData({
-        repopath: this.selectedRepoPath,
-        repotree: this.selectedRepoTree,
-        ignores: this.selectedIgnoredFiles,
-        fromDate: this.date[0]
-      });
+    useExtensionsManager: function (repo) {
+      if (this.selectedIgnoredFiles && this.selectedIgnoredFiles != [] || this.alert) {
+        this.updateRepoData({
+          repopath: repo.path,
+          repotree: repo.tree,
+          ignores: repo.ignoredFiles,
+          fromDate: this.date[0]
+        });
+      }
       this.reloadImpact();
       this.alert = false;
     },
