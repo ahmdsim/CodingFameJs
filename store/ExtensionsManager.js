@@ -28,13 +28,13 @@ export const getters = {
     return state.impact
   },
   getPieDatas(state) {
-    return state.pieDatas
+    return {repopath: state.repopath, pieDatas: state.pieDatas}
   },
   getMainPieData(state) {
-    return state.mainPieData
+    return {repopath: state.repopath, mainPieData: state.mainPieData}
   },
   getPersonalImpact(state) {
-    return state.personalImpact
+    return {repopath: state.repopath, personalImpact: state.personalImpact}
   }
 }
 

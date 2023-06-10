@@ -1,11 +1,11 @@
 <template>
-  <div>
-    <GChart
-      v-if="Object.values(rawData).length > 0"
-      type="ColumnChart"
-      :data="lineChartData"
-      :options="lineChartOptions"
-    />
+    <div class="chart-div">
+      <GChart
+        v-if="Object.values(rawData).length > 0"
+        type="ColumnChart"
+        :data="lineChartData"
+        :options="lineChartOptions"
+      />
   </div>
 </template>
 <script>
@@ -29,6 +29,10 @@ export default {
       type: Array,
       default: () => [],
     },
+    path: {
+      type: String,
+      default: ''
+    }
   },
   data: function () {
     return {
@@ -45,6 +49,7 @@ export default {
           1: { title: "Changes", baseline: 0, },
         },
         height: 300,
+        width: 1166,
       },
       lineChartData: [["Day", "Commits", "Changes"]],
     };
@@ -68,7 +73,8 @@ export default {
       const commits = {};
       const lines = {};
       this.lineChartData = [["Day", "Commits", "Changes"]]
-      Object.values(this.rawData).forEach((repo) => {
+      let repo = this.rawData[this.path] ? this.rawData[this.path] : [];
+      console.log(repo)
         repo.forEach((commit) => {
         var date = new Date(commit.date);
         var dateKey = date.toISOString().substring(0, 10);
@@ -77,7 +83,7 @@ export default {
           (lines[dateKey] ?? 0) +
           commit.stat.reduce((p, c) => p + c.added + c.deleted, 0);
         })
-      });
+
       var dates = this.getDatesBetween(
         new Date(this.dates[0]),
         new Date(this.dates[1])
@@ -119,3 +125,9 @@ export default {
   }
 };
 </script>
+<style>
+.chart-div {
+  margin: auto;
+  width:1166px;
+}
+</style>
