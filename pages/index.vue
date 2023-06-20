@@ -209,8 +209,21 @@
                   </v-tab-item>
                   <v-tab-item>
                     <v-card flat>
+                      <div
+                        v-if="mainPieData[repo.path] && mainPieData[repo.path].length < 2"
+                        class="extensionsChart"
+                      >
+                        <div>
+                          <v-progress-circular
+                            :size="70"
+                            :width="7"
+                            color="primary"
+                            indeterminate
+                          />
+                        </div>
+                      </div>
                       <FileExtensionsChart
-                        v-if="!isSpinerExtensions"
+                        v-else
                         :pieData="mainPieData[repo.path]"
                         @stopSpinerExtensions="isSpinerExtensions = false"
                       />
@@ -241,6 +254,59 @@
                           </v-btn>
                         </div>
                       </template>
+                    </v-card>
+                  </v-tab-item>
+                  <v-tab-item v-if="isImpact">
+                    <v-card flat>
+                      <ImpactCharts
+                        :pieDatas="pieDatas[repo.path]"
+                        :personalImpact="personalImpact[repo.path]"
+                        :extensions="mainPieData[repo.path]"
+                      />
+                    </v-card>
+                  </v-tab-item>
+                  <v-tab-item v-if="isPersistence">
+                    <v-card flat>
+                      <PersistenceChart @persistenceData="changePersistenceData" />
+                    </v-card>
+                  </v-tab-item>
+                </v-tabs-items>
+                    </v-window-item>
+                    <v-window-item
+                    >
+                    <h3 style="text-align: center;">All repos</h3>
+                    <v-tabs-items v-model="tab">
+                  <v-tab-item>
+                    <v-card flat class="commit-chart-window">
+                      <commits-and-code-chart
+                        :path="'all'"
+                        :rawData="rawData"
+                        :dates="date"
+                        @stopSpiner="isSpiner = false"
+                      />
+                      <div v-if="isSpiner" class="chart-spiner">
+                        <v-progress-circular
+                          :size="70"
+                          :width="7"
+                          color="primary"
+                          indeterminate
+                        />
+                      </div>
+                      <DateChanger
+                        :date="date"
+                        :date-range="dateRange"
+                        @changeDate="onChangeDate"
+                        @analize="analize"
+                      />
+                    </v-card>
+                  </v-tab-item>
+                  <v-tab-item>
+                    <v-card flat>
+                      <FileExtensionsChart
+                        v-if="!isSpinerExtensions"
+                        :pieData='mainPieDataAll'
+                        @stopSpinerExtensions="isSpinerExtensions = false"
+                      />
                       <div v-if="isSpinerExtensions" class="chart-spiner">
                         <v-progress-circular
                           :size="70"
@@ -254,9 +320,8 @@
                   <v-tab-item v-if="isImpact">
                     <v-card flat>
                       <ImpactCharts
-                        :pieDatas="pieDatas[repo.path]"
-                        :personalImpact="personalImpact[repo.path]"
-                        :extensions="mainPieData[repo.path]"
+                        :pieDatas="pieDatasAll"
+                        :personalImpact="personalImpactAll"
                       />
                     </v-card>
                   </v-tab-item>
@@ -407,6 +472,42 @@ export default {
       this.reloadCandCData()
       return this.mainPieDatasRepos;
     },
+    mainPieDataAll: function () {
+      let all = []
+      let preMain = Object.values(this.mainPieData).flat().filter((ext) => ext[1] != 'Lines of code')
+      let uniqueKeys = preMain.map((ext) => ext[0]).filter(this.onlyUnique)
+      uniqueKeys.forEach((ext) => {
+        all.push([ext, preMain.filter((exten) => exten[0] == ext).reduce((sum, current) => sum + current[1], 0)])
+      })
+      console.log('final result', [['Type of files', 'Lines of code']].concat(all))
+      return [['Type of files', 'Lines of code']].concat(all)
+    },
+    pieDatasAll: function () {
+      let all = []
+      let preMain = Object.values(this.pieDatas).flat()
+      let uniqueKeys = preMain.map((ext) => ext['ext']).filter(this.onlyUnique)
+
+      uniqueKeys.forEach((ext) => {
+        var extAuthors = preMain.filter((exten) => exten['ext'] == ext).reduce((sum, current) => sum.concat(current['pieData']), []).filter((stat) => stat[1] != 'Lines of code')
+        var uniqueAuthors = extAuthors.map((author) => author[0]).filter(this.onlyUnique)
+        var preAll = [['Author', 'Lines of code']]
+        uniqueAuthors.forEach((author) => {
+          preAll.push([author, extAuthors.filter((auth) => auth[0] == author).reduce((sum, current) => sum + current[1], 0)])
+        })
+        all.push({ext: ext, pieData:  preAll})
+      })
+      return all
+    },
+    personalImpactAll: function () {
+      let all = []
+      let preMain = Object.values(this.personalImpact).flat().filter((author) => author[1] != 'Lines of code')
+      let uniqueKeys = preMain.map((author) => author[0]).filter(this.onlyUnique)
+      uniqueKeys.forEach((author) => {
+        all.push([author, preMain.filter((auth) => auth[0] == author).reduce((sum, current) => sum + current[1], 0)])
+      })
+      console.log('final result', [['Author', 'Lines of code']].concat(all))
+      return [['Author', 'Lines of code']].concat(all)
+    },
   },
   async mounted() {
     if (process.client) {
@@ -462,6 +563,9 @@ export default {
       getPieDatas: "ExtensionsManager/getPieDatas",
       getPersonalImpact: "ExtensionsManager/getPersonalImpact",
     }),
+    onlyUnique: function (value, index, array) {
+      return array.indexOf(value) === index;
+    },
     switchImpact: function (data) {
       this.isImpact = data.impact;
     },
@@ -774,5 +878,10 @@ export default {
 .chart-spiner {
   margin: 0 auto;
   width: 70px;
+}
+.extensionsChart {
+  height: 300px; display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

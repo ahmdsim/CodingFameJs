@@ -73,8 +73,7 @@ export default {
       const commits = {};
       const lines = {};
       this.lineChartData = [["Day", "Commits", "Changes"]]
-      let repo = this.rawData[this.path] ? this.rawData[this.path] : [];
-      console.log(repo)
+      let repo = this.path == 'all' ? Object.values(this.rawData).flat() : this.rawData[this.path] ? this.rawData[this.path]: [];
         repo.forEach((commit) => {
         var date = new Date(commit.date);
         var dateKey = date.toISOString().substring(0, 10);
