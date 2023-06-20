@@ -43,6 +43,9 @@ export const mutations = {
     state.repopath = payload.repopath
     state.ignores = payload.ignores
     state.fromDate = payload.fromDate
+    state.personalImpact = []
+    state.mainPieData = []
+    state.pieDatas = []
 
     let extractedFiles = payload.repotree.map((file) => (extractFiles(file))).reduce((p, c) => p.concat(c), []).map((file) => file.split('.').pop())
     let extensions = new Set(extractedFiles)
