@@ -94,7 +94,6 @@
                 :key="commit[0]"
                 class="commit-info"
                 :class="{oddCommit: index % 2 != 0, isActive: [author.email.replace(/@|\./g, ''), index].join('_') == activeNod}"
-                @click="activeCommit(index, author)"
               >
                 <v-list-item-title><v-icon>mdi-source-commit</v-icon> {{ commit[0].slice(0, 7) }}</v-list-item-title>
                 <v-list-item-subtitle>
