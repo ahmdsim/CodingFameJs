@@ -103,10 +103,9 @@ export default async function (req, res, _) {
     const blamejs = new BlameJS();   
     let authors = new Map();
     var step = (files.length - files.length % 10) / 10;
-    
+
     for (let i = 0; i < files.length; i++) {
       let file = files[i]
-      console.log('file', file);
       let dirpath = file.split('/');
       const filename = dirpath.pop();
       dirpath = dirpath.join('/');
@@ -120,6 +119,15 @@ export default async function (req, res, _) {
       for (let ind in lineData) {
         let author = commitData[lineData[ind].hash]["authorMail"];
         let newLine = job.data.fromDate ? commitData[lineData[ind].hash]["authorTime"] >= new Date(job.data.fromDate).getTime() / 1000 ? 1 : 0 : 1;
+        // newLines += newLine
+        if (newLine == 1) {
+          var time = new Date(commitData[lineData[ind].hash]["authorTime"] * 1000);
+  
+          var theyear = time.getFullYear();
+          var themonth = time.getMonth() + 1;
+          var thetoday = time.getDate();
+          console.log(`${author} || ${filename} || ${ind} || ${theyear + "/" + themonth + "/" + thetoday}`)
+        }
 
         if (authors.get(author)) {
           if (authors.get(author).get(ext)) {
