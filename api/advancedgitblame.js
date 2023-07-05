@@ -87,6 +87,7 @@ export default async function (req, res, _) {
     let ignores = job.data.ignores
     let files = [];
     var jobHash = hash(job.data)
+    const fromDate = new Date(job.data.fromDate).getTime() / 1000 
 
     const result = await fg([repopath + '/**/*'], { dot: true })
     const repotree = parse(result, repopath)
@@ -99,8 +100,7 @@ export default async function (req, res, _) {
     //   }
     // });
     console.log('files.length', files.length);
-
-    const blamejs = new BlameJS();   
+ 
     let authors = new Map();
     var step = (files.length - files.length % 10) / 10;
 
@@ -110,15 +110,17 @@ export default async function (req, res, _) {
       const filename = dirpath.pop();
       dirpath = dirpath.join('/');
       let ext = filename.split('.').pop()
-      
-      const gitblame = shell.exec(`cd ${dirpath} && git blame ${filename} -p`, { silent: true }).stdout;
+
+      var requestBlame = `cd ${dirpath} && git blame ${filename} -p`
+      const gitblame = shell.exec(requestBlame, { silent: true }).stdout;
+      const blamejs = new BlameJS();  
       blamejs.parseBlame(gitblame);
       var commitData = blamejs.getCommitData();
       var lineData = blamejs.getLineData();
 
       for (let ind in lineData) {
         let author = commitData[lineData[ind].hash]["authorMail"];
-        let newLine = job.data.fromDate ? commitData[lineData[ind].hash]["authorTime"] >= new Date(job.data.fromDate).getTime() / 1000 ? 1 : 0 : 1;
+        let newLine = job.data.fromDate ? commitData[lineData[ind].hash]["authorTime"] >= fromDate ? 1 : 0 : 1;
         // newLines += newLine
         if (newLine == 1) {
           var time = new Date(commitData[lineData[ind].hash]["authorTime"] * 1000);
@@ -126,7 +128,7 @@ export default async function (req, res, _) {
           var theyear = time.getFullYear();
           var themonth = time.getMonth() + 1;
           var thetoday = time.getDate();
-          console.log(`${author} || ${filename} || ${ind} || ${theyear + "/" + themonth + "/" + thetoday}`)
+          console.log(`${author} || ${file} || ${ind} || ${theyear + "/" + themonth + "/" + thetoday}`)
         }
 
         if (authors.get(author)) {
