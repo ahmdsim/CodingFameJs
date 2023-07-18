@@ -145,17 +145,13 @@
             </v-card>
           </v-dialog>
         </div>
-        <Statistics
+        <GeneralInfo
           :repos="repos"
-          :sorted-authors="sortedAuthors"
-          :ignore-file-callback="ignoreFile"
-          :ignore-extension-callback="ignoreExtension"
-          :is-ignored-callback="isIgnored"
         />
         <v-row>
           <v-col>
             <div class="mt-3">
-              <v-card flat tile>
+              <v-card flat tile style="height: 448px;">
                 <template id="persistenceTabs">
                   <client-only>
                     <v-tabs v-model="tab" align-with-title>
@@ -225,6 +221,7 @@
                       <FileExtensionsChart
                         v-else
                         :pieData="mainPieData[repo.path]"
+                        :status="statusRepos[repo.path]"
                         @stopSpinerExtensions="isSpinerExtensions = false"
                       />
                       <template>
@@ -249,7 +246,7 @@
                               </v-col>
                             </v-row>
                           </v-alert>
-                          <v-btn v-if="!alert" @click="useExtensionsManager(repo)">
+                          <v-btn v-if="!alert || statusRepos[repo.path] == 'failed'" @click="useExtensionsManager(repo)">
                             Make analysis
                           </v-btn>
                         </div>
@@ -320,6 +317,7 @@
                   <v-tab-item v-if="isImpact">
                     <v-card flat>
                       <ImpactCharts
+                        :status="success"
                         :pieDatas="pieDatasAll"
                         :personalImpact="personalImpactAll"
                       />
@@ -338,6 +336,13 @@
             </div>
           </v-col>
         </v-row>
+        <Statistics
+          :repos="repos"
+          :sorted-authors="sortedAuthors"
+          :ignore-file-callback="ignoreFile"
+          :ignore-extension-callback="ignoreExtension"
+          :is-ignored-callback="isIgnored"
+        />
       </v-col>
     </v-row>
     <router-view />
@@ -364,6 +369,7 @@ import FileExtensionsChart from "../components/FileExtensionsChart.vue";
 import AnalysisList from "../components/AnalysisList.vue";
 import ImpactCharts from "../components/ImpactCharts.vue";
 import PersistenceChart from "../components/PersistenceChart.vue";
+import GeneralInfo from "../components/GeneralInfo.vue";
 
 export default {
   components: {
@@ -382,6 +388,7 @@ export default {
     AnalysisList,
     ImpactCharts,
     PersistenceChart,
+    GeneralInfo,
   },
   data: () => ({
     filePreview: "",
@@ -418,6 +425,7 @@ export default {
     pieDataRepos: {},
     mainPieDatasRepos: {},
     personalImpactRepos: {},
+    statusRepos: {},
   }),
   computed: {
     selectedIgnoredFiles: function () {
@@ -562,6 +570,7 @@ export default {
       getMainData: "ExtensionsManager/getMainPieData",
       getPieDatas: "ExtensionsManager/getPieDatas",
       getPersonalImpact: "ExtensionsManager/getPersonalImpact",
+      getStatus: 'ExtensionsManager/getStatus',
     }),
     onlyUnique: function (value, index, array) {
       return array.indexOf(value) === index;
@@ -614,6 +623,7 @@ export default {
       this.personalImpactRepos[this.getPersonalImpact()['repopath']] = this.getPersonalImpact()['personalImpact']
       this.pieDataRepos[this.getPieDatas()['repopath']] = this.getPieDatas()['pieDatas']
       this.mainPieDatasRepos[this.getMainData()['repopath']] = [["Type of files", "Lines of code"]].concat(this.getMainData()['mainPieData']);
+      this.statusRepos[this.getPersonalImpact()['repopath']] = this.getStatus()
     },
     analize: async function () {
       this.isSpiner = true;

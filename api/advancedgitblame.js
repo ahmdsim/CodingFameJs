@@ -87,6 +87,7 @@ export default async function (req, res, _) {
     let ignores = job.data.ignores
     let files = [];
     var jobHash = hash(job.data)
+    const fromDate = new Date(job.data.fromDate).getTime() / 1000 
 
     const result = await fg([repopath + '/**/*'], { dot: true })
     const repotree = parse(result, repopath)
@@ -99,8 +100,7 @@ export default async function (req, res, _) {
     //   }
     // });
     console.log('files.length', files.length);
-
-    const blamejs = new BlameJS();   
+ 
     let authors = new Map();
     var step = (files.length - files.length % 10) / 10;
 
@@ -110,23 +110,23 @@ export default async function (req, res, _) {
       const filename = dirpath.pop();
       dirpath = dirpath.join('/');
       let ext = filename.split('.').pop()
-      
-      const gitblame = shell.exec(`cd ${dirpath} && git blame ${filename} -p`, { silent: true }).stdout;
+      var requestBlame = `cd ${dirpath} && git blame ${filename} -p`
+      const gitblame = shell.exec(requestBlame, { silent: true }).stdout;
+      const blamejs = new BlameJS();  
       blamejs.parseBlame(gitblame);
       var commitData = blamejs.getCommitData();
       var lineData = blamejs.getLineData();
 
       for (let ind in lineData) {
         let author = commitData[lineData[ind].hash]["authorMail"];
-        let newLine = job.data.fromDate ? commitData[lineData[ind].hash]["authorTime"] >= new Date(job.data.fromDate).getTime() / 1000 ? 1 : 0 : 1;
-        // newLines += newLine
+        let newLine = job.data.fromDate ? commitData[lineData[ind].hash]["authorTime"] >= fromDate ? 1 : 0 : 1;
         if (newLine == 1) {
           var time = new Date(commitData[lineData[ind].hash]["authorTime"] * 1000);
   
           var theyear = time.getFullYear();
           var themonth = time.getMonth() + 1;
           var thetoday = time.getDate();
-          console.log(`${author} || ${filename} || ${ind} || ${theyear + "/" + themonth + "/" + thetoday}`)
+          console.log(`${author} || ${file} || ${ind} || ${theyear + "/" + themonth + "/" + thetoday}`)
         }
 
         if (authors.get(author)) {
@@ -161,21 +161,6 @@ export default async function (req, res, _) {
         }
 
         fs.writeFileSync(`analyses/process_${interProgress}_${jobHash}`, JSON.stringify({analysis: intermediate, progress: interProgress}));
-        // fs.writeFileSync(`analyses/process_${interProgress}_${jobHash}`, `i = ${i}; step = ${step}; result = ${i / step}; first: ${0 < (i / step)}; second: ${(i / step) < 10}`);
-
-        // fs.writeFileSync(`analyses/process_${interProgress}_${jobHash}`, JSON.stringify(interProgress), (err) => {
-        //   if (err) {
-        //     console.log(err)
-        //   }
-        // });
-  
-        // writer.write(JSON.stringify({analysis: intermediate, progress: interProgress}));
-        // fs.writeFileSync(`analyses/${jobHash}`, JSON.stringify({analysis: intermediate, progress: interProgress}));
-        // fs.writeFile(`analyses/${jobHash}`, JSON.stringify({analysis: intermediate, progress: interProgress}), (err) => {
-        //   if (err) {
-        //     console.log(err)
-        //   }
-        // });
       }
     }
 
@@ -184,7 +169,7 @@ export default async function (req, res, _) {
       resultAuthors.set(author, Object.fromEntries(authors.get(author).entries()))
     }
     let resultOutput = JSON.stringify(Object.fromEntries(resultAuthors.entries()));
-    fs.writeFileSync(`analyses/process_100_${jobHash}`, JSON.stringify({analysis: resultOutput, progress: 100}));
+    fs.writeFileSync(`analyses/process_100_${jobHash}`, JSON.stringify({analysis: resultOutput, progress: 100, status: 'success'}));
 
     fs.unlink(`analyses/process_90_${jobHash}`, (err) => {
       if (err) throw err;
@@ -273,7 +258,7 @@ export default async function (req, res, _) {
   }
 
   chartQueue.on('error', (err) => {
-    fs.writeFile(`analyses/${jobHash}_error`, JSON.stringify(err), (erro) => {
+    fs.writeFile(`analyses/process_100_${jobHash}`, JSON.stringify({status: 'failed', error: JSON.stringify(err), progress: 100, analysis: '{}'}), (erro) => {
       if (erro) {
         console.log(erro)
       }
