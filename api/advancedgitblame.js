@@ -110,6 +110,7 @@ export default async function (req, res, _) {
       const filename = dirpath.pop();
       dirpath = dirpath.join('/');
       let ext = filename.split('.').pop()
+
       var requestBlame = `cd ${dirpath} && git blame ${filename} -p`
       const gitblame = shell.exec(requestBlame, { silent: true }).stdout;
       const blamejs = new BlameJS();  
@@ -120,6 +121,7 @@ export default async function (req, res, _) {
       for (let ind in lineData) {
         let author = commitData[lineData[ind].hash]["authorMail"];
         let newLine = job.data.fromDate ? commitData[lineData[ind].hash]["authorTime"] >= fromDate ? 1 : 0 : 1;
+        // newLines += newLine
         if (newLine == 1) {
           var time = new Date(commitData[lineData[ind].hash]["authorTime"] * 1000);
   
