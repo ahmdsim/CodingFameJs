@@ -163,21 +163,6 @@ export default async function (req, res, _) {
         }
 
         fs.writeFileSync(`analyses/process_${interProgress}_${jobHash}`, JSON.stringify({analysis: intermediate, progress: interProgress}));
-        // fs.writeFileSync(`analyses/process_${interProgress}_${jobHash}`, `i = ${i}; step = ${step}; result = ${i / step}; first: ${0 < (i / step)}; second: ${(i / step) < 10}`);
-
-        // fs.writeFileSync(`analyses/process_${interProgress}_${jobHash}`, JSON.stringify(interProgress), (err) => {
-        //   if (err) {
-        //     console.log(err)
-        //   }
-        // });
-  
-        // writer.write(JSON.stringify({analysis: intermediate, progress: interProgress}));
-        // fs.writeFileSync(`analyses/${jobHash}`, JSON.stringify({analysis: intermediate, progress: interProgress}));
-        // fs.writeFile(`analyses/${jobHash}`, JSON.stringify({analysis: intermediate, progress: interProgress}), (err) => {
-        //   if (err) {
-        //     console.log(err)
-        //   }
-        // });
       }
     }
 
@@ -186,7 +171,7 @@ export default async function (req, res, _) {
       resultAuthors.set(author, Object.fromEntries(authors.get(author).entries()))
     }
     let resultOutput = JSON.stringify(Object.fromEntries(resultAuthors.entries()));
-    fs.writeFileSync(`analyses/process_100_${jobHash}`, JSON.stringify({analysis: resultOutput, progress: 100}));
+    fs.writeFileSync(`analyses/process_100_${jobHash}`, JSON.stringify({analysis: resultOutput, progress: 100, status: 'success'}));
 
     fs.unlink(`analyses/process_90_${jobHash}`, (err) => {
       if (err) throw err;
@@ -275,7 +260,7 @@ export default async function (req, res, _) {
   }
 
   chartQueue.on('error', (err) => {
-    fs.writeFile(`analyses/${jobHash}_error`, JSON.stringify(err), (erro) => {
+    fs.writeFile(`analyses/process_100_${jobHash}`, JSON.stringify({status: 'failed', error: JSON.stringify(err), progress: 100, analysis: '{}'}), (erro) => {
       if (erro) {
         console.log(erro)
       }

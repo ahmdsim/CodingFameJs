@@ -20,7 +20,8 @@ export const state = () => ({
   mainPieData: [],
   personalImpact: [],
   ignores: [],
-  fromDate: ''
+  fromDate: '',
+  status: 'Nothing',
 })
 
 export const getters = {
@@ -35,7 +36,10 @@ export const getters = {
   },
   getPersonalImpact(state) {
     return {repopath: state.repopath, personalImpact: state.personalImpact}
-  }
+  },
+  getStatus(state) {
+    return state.status
+  },
 }
 
 export const mutations = {
@@ -46,6 +50,7 @@ export const mutations = {
     state.personalImpact = []
     state.mainPieData = []
     state.pieDatas = []
+    state.status = payload.status
 
     let extractedFiles = payload.repotree.map((file) => (extractFiles(file))).reduce((p, c) => p.concat(c), []).map((file) => file.split('.').pop())
     let extensions = new Set(extractedFiles)
@@ -88,6 +93,9 @@ export const mutations = {
     mainExtensions.push(['other', other])
     state.mainPieData = mainExtensions
   },
+  setStatus(state, payload) {
+    state.status = payload.status
+  },
 }
 
 export const actions = {
@@ -99,6 +107,7 @@ export const actions = {
       ).then(function (data) {
         impact = JSON.parse(data)
         impact.analysis = JSON.parse(impact.analysis)
+        commit('setStatus', { status: impact.status })
         commit('setImpact', { impact: impact.analysis })
         if (impact.progress != 100) {
           setTimeout(request, 10000)

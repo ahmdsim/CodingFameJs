@@ -1,11 +1,16 @@
 <template>
   <div>
-    <GChart
-      v-if="pieData.length != 0"
-      type="PieChart"
-      :options="pieChartOptions"
-      :data="pieData"
-    />
+    <div v-if="status == 'failed'" style="height: 300px;">
+      <v-icon size="100"  color="red">mdi-alert-circle</v-icon>
+    </div>
+    <div v-else>
+      <GChart
+        v-if="pieData.length != 0"
+        type="PieChart"
+        :options="pieChartOptions"
+        :data="pieData"
+      />
+    </div>
   </div>
 </template>
 <script>
@@ -19,6 +24,9 @@ export default {
     pieData: {
       type: Array,
       default: () => []
+    },
+    status: {
+      type: String,
     },
   },
   data: function () {
