@@ -449,7 +449,7 @@ export default {
         }
         return 0;
       });
-      return result.length > 10 ? result.slice(0, 10) : result;
+      return result;
     },
     dateRange: function () {
       return this.date.join(" - ");
