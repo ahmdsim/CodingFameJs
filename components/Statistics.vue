@@ -68,7 +68,16 @@
                 class="commit-info"
                 :class="{oddCommit: index % 2 != 0, isActive: [author.email.replace(/@|\./g, ''), index].join('_') == activeNod}"
               >
-                <v-list-item-title><v-icon>mdi-source-commit</v-icon> {{ commit[0].slice(0, 7) }}</v-list-item-title>
+                <v-tooltip left>
+                  <template #activator="{ on, attrs }">
+                    <v-list-item-title
+                      v-bind="attrs"
+                      v-on="on"
+                    ><v-icon>mdi-source-commit</v-icon> {{ commit[0].slice(0, 7) }}
+                    </v-list-item-title>
+                  </template>
+                  <span>{{ commit[4] }}</span>
+                </v-tooltip>
                 <v-list-item-subtitle>
                   {{ commit[1] }} LoC: +{{ commit[2][0] }} -{{ commit[2][1] }} T: {{ commit[2][0] - commit[2][1] }}
                 </v-list-item-subtitle>
