@@ -179,28 +179,32 @@
                     >
                     <h3 style="text-align: center;">{{ repo.path }}</h3>
                     <v-tabs-items v-model="tab">
-                  <v-tab-item>
+                  <v-tab-item style="height: 370px !important;">
                     <v-card flat class="commit-chart-window">
-                      <commits-and-code-chart
-                        :path="repo.path"
-                        :rawData="rawData"
-                        :dates="date"
-                        @stopSpiner="isSpiner = false"
-                      />
-                      <div v-if="isSpiner" class="chart-spiner">
-                        <v-progress-circular
-                          :size="70"
-                          :width="7"
-                          color="primary"
-                          indeterminate
+                      <div style="height: 300px !important;">
+                        <commits-and-code-chart
+                          :path="repo.path"
+                          :rawData="rawData"
+                          :dates="date"
+                          @stopSpiner="isSpiner = false"
+                        />
+                        <div v-if="isSpiner" class="chart-spiner">
+                          <v-progress-circular
+                            :size="70"
+                            :width="7"
+                            color="primary"
+                            indeterminate
+                          />
+                        </div>
+                      </div>
+                      <div style="margin-top: auto !important;margin-bottom: 0px; !important">
+                        <DateChanger
+                          :date="date"
+                          :date-range="dateRange"
+                          @changeDate="onChangeDate"
+                          @analize="analize"
                         />
                       </div>
-                      <DateChanger
-                        :date="date"
-                        :date-range="dateRange"
-                        @changeDate="onChangeDate"
-                        @analize="analize"
-                      />
                     </v-card>
                   </v-tab-item>
                   <v-tab-item>
@@ -275,26 +279,30 @@
                     <v-tabs-items v-model="tab">
                   <v-tab-item>
                     <v-card flat class="commit-chart-window">
-                      <commits-and-code-chart
-                        :path="'all'"
-                        :rawData="rawData"
-                        :dates="date"
-                        @stopSpiner="isSpiner = false"
-                      />
-                      <div v-if="isSpiner" class="chart-spiner">
-                        <v-progress-circular
-                          :size="70"
-                          :width="7"
-                          color="primary"
-                          indeterminate
+                      <div style="height: 300px !important;">
+                        <commits-and-code-chart
+                          :path="'all'"
+                          :rawData="rawData"
+                          :dates="date"
+                          @stopSpiner="isSpiner = false"
+                        />
+                        <div v-if="isSpiner" class="chart-spiner">
+                          <v-progress-circular
+                            :size="70"
+                            :width="7"
+                            color="primary"
+                            indeterminate
+                          />
+                        </div>
+                      </div>
+                      <div style="margin-top: auto !important;margin-bottom: 0px; !important">
+                        <DateChanger
+                          :date="date"
+                          :date-range="dateRange"
+                          @changeDate="onChangeDate"
+                          @analize="analize"
                         />
                       </div>
-                      <DateChanger
-                        :date="date"
-                        :date-range="dateRange"
-                        @changeDate="onChangeDate"
-                        @analize="analize"
-                      />
                     </v-card>
                   </v-tab-item>
                   <v-tab-item>
