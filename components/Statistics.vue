@@ -35,56 +35,65 @@
           scrollable
           class="dialog-window"
         >
-        <v-card
-          height="700px"
-        >
-          <div class="close-icon">
-            <v-icon class="close-box" @click="overlay=false;">
-              mdi-close-box
-            </v-icon>
-          </div>
-          <v-list three-line>
-            <v-list-group
-              v-for="author in sortedAuthors"
-              :key="author.email"
-              v-model="author.active"
-            >
-              <template #activator>
-                <v-list-item-avatar>
-                  <v-icon>mdi-account-outline</v-icon>
-                </v-list-item-avatar>
-                <v-list-item-content>
-                  <v-list-item-title>{{ author.email }}</v-list-item-title>
-                  <v-list-item-subtitle>
-                    Commits: {{ author.commits }} <br> LoC: +{{ author.lines.added }} -{{
-                      author.lines.deleted }} T: {{ author.lines.added - author.lines.deleted }}
-                  </v-list-item-subtitle>
-                </v-list-item-content>
-              </template>
-              <v-list-item
-                v-for="(commit, index) in author.details"
-                v-bind:id="[author.email.replace(/@|\./g, ''), index].join('_')"
-                :key="commit[0]"
-                class="commit-info"
-                :class="{oddCommit: index % 2 != 0, isActive: [author.email.replace(/@|\./g, ''), index].join('_') == activeNod}"
-              >
-                <v-tooltip left>
-                  <template #activator="{ on, attrs }">
-                    <v-list-item-title
-                      v-bind="attrs"
-                      v-on="on"
-                    ><v-icon>mdi-source-commit</v-icon> {{ commit[0].slice(0, 7) }}
-                    </v-list-item-title>
+          <v-card height="700px" class="tree-card">
+            <v-card-text max-height="600px">
+              <div>
+                <div class="close-icon">
+                  <v-icon class="close-box" @click="overlay=false">
+                    mdi-close-box
+                  </v-icon>
+                </div>
+                <v-treeview
+                  v-if="authors.length > 0"
+                  :items="authors"
+                  item-key="id"
+                  :active="activeNod"
+                  :open="activeNod"
+                  open-on-click
+                  hoverable
+                  dense
+                  transition
+                  activatable
+                >
+                  <template #prepend="{ item }">
+                    <v-icon v-if="item.hash">
+                      mdi-source-commit
+                    </v-icon>
+                    <v-icon v-else-if="item.commits">
+                      mdi-account
+                    </v-icon>
+                    <v-icon v-else>
+                      mdi-file-document
+                    </v-icon>
                   </template>
-                  <span>{{ commit[4] }}</span>
-                </v-tooltip>
-                <v-list-item-subtitle>
-                  {{ commit[1] }} LoC: +{{ commit[2][0] }} -{{ commit[2][1] }} T: {{ commit[2][0] - commit[2][1] }}
-                </v-list-item-subtitle>
-              </v-list-item>
-            </v-list-group>
-          </v-list>
-        </v-card>
+                  <template #label="{ item }">
+                    <div v-if="item.hash" :id="[item.email.replace(/@|\./g, ''), item.index].join('_')"></div>
+                    <div v-if="item.hash || item.commits">
+                      {{ item.name }}
+                    </div>
+                    <div v-else>
+                      <span v-if="isIgnoredCallback(item.name, item.repopath)" class="ignored-files">{{ item.name }}</span>
+                      <span v-else>{{ item.name }}</span>
+                    </div>
+                  </template>
+                  <template #append="{ item }">
+                    <div v-if="!item.hash && !item.commits">
+                      {{ item.LoC }}
+                      <v-icon @click="ignoreFileCallback(item.repopath + '/' + item.name, item.repopath)">
+                        mdi-file-document-remove
+                      </v-icon>
+                      <v-icon @click="ignoreFileCallback(item.repopath + '/' + item.name.split('/').slice(0, -1).join(`/`), item.repopath, true)">
+                        mdi-folder-remove
+                      </v-icon>
+                      <v-btn text class="ignore-ext-btn" @click="ignoreExtensionCallback(item.repopath, item.name.split('.').pop())">
+                        .ext
+                      </v-btn>
+                    </div>
+                  </template>
+                </v-treeview>
+              </div>
+            </v-card-text>
+          </v-card>
         </v-dialog>
         <v-card class="author-list" flat tile>
           <v-toolbar elevation="0">
@@ -115,7 +124,7 @@
                 :key="commit[0]"
                 class="commit-info"
                 :class="{oddCommit: index % 2 != 0}"
-                @click="openList(index, author);"
+                @click="activateCommit(index, author);"
               >
                 <v-list-item-title><v-icon>mdi-source-commit</v-icon> {{ commit[0].slice(0, 7) }}</v-list-item-title>
                 <v-list-item-subtitle>
@@ -162,8 +171,9 @@ export default {
       this.sortedAuthors.forEach((author) => {
         let formatedAuthor = {name: author.email, children: [], commits: true, id: i};
         i += 1;
+        let j = 0;
         author.details.forEach((commit) => {
-          let formatedCommit = {id: i++, name: commit[1], children: commit[3].map((file) => ({id: i++, name: file.filepath, LoC:`LoC: ${file.added - file.deleted}`, children: [], repopath: commit[4]})), hash: commit[0]}
+          let formatedCommit = {id: i++, name: commit[1], children: commit[3].map((file) => ({id: i++, name: file.filepath, LoC:`LoC: ${file.added - file.deleted}`, children: [], repopath: commit[4]})), hash: commit[0], email: formatedAuthor.name, index: j++}
           formatedAuthor.children.push(formatedCommit);
         });
         i++;
@@ -173,17 +183,12 @@ export default {
     }
   },
   methods: {
-    openList: function (index, author) {
+    activateCommit: function (index, author) {
       this.overlay = true
-
+      this.activeNod = [this.authors.find((auth) => auth.name == author.email).id, this.authors.find((auth) => auth.name == author.email).children[index].id]
       this.$nextTick(() => {
         document.getElementById([author.email.replace(/@|\./g, ''), index].join('_')).scrollIntoView(true);
       })
-
-      this.activateCommit(index, author)
-    },
-    activateCommit: function (index, author) {
-      this.activeNod = [author.email.replace(/@|\./g, ''), index].join('_')
     },
   },
 }
