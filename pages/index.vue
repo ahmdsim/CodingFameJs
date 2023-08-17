@@ -151,7 +151,7 @@
         <v-row>
           <v-col>
             <div class="mt-3">
-              <v-card flat tile style="height: 448px;">
+              <v-card flat tile style="min-height: 448px;">
                 <template id="persistenceTabs">
                   <client-only>
                     <v-tabs v-model="tab" align-with-title>
