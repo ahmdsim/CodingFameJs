@@ -62,13 +62,19 @@ export default {
       removeRepository: function (index) {
         this.$emit("removeRepository", {index: index});
       },
+      gitDirectoriesFound: function (index, repos) {
+        this.$emit("gitDirectoriesFound", {index, repos});
+      },
       updatePath: async function (index, path) {
         this.repos[index].path = path
-        let existence = await this.$axios.$get(
+        let existenceRs = await this.$axios.$get(
           `/existence?path=${escape(path)}`
         );
+        const existence = existenceRs.isRepo;
         if (!existence) {
-          if (this.unexrepos.indexOf(index) == -1) {
+          if (existenceRs.repos.length) {
+            this.gitDirectoriesFound(index, existenceRs.repos);
+          } else if (this.unexrepos.indexOf(index) == -1) {
             this.unexrepos.push(index)
           }
         } else {
