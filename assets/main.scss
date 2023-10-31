@@ -144,3 +144,13 @@
         }
     }
 }
+
+.filters .v-input.theme--light.v-input--selection-controls.v-input--checkbox {
+    margin: 0;
+}
+.filters .v-messages.theme--light {
+    display: none;
+}
+.filters  .v-chip.primary {
+  margin: 8px 4px;
+}

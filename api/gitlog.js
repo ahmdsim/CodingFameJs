@@ -2,6 +2,7 @@ const shell = require('shelljs')
 const minimatch = require('minimatch')
 
 export default function (req, res, _) {
+  res.setHeader('Content-Type', 'application/json');
   const url = new URL(req.url, `http://${req.headers.host}`)
   if (url.searchParams.get('repo') == null) {
     res.end()
@@ -29,7 +30,22 @@ export default function (req, res, _) {
     ignores = url.searchParams.get('ignore').replace(/ /g, '').split(',')
   }
 
-  const gitlog = shell.exec(`cd ${url.searchParams.get('repo')} && git log --numstat ${gitFilterParams}`, { silent: true }).stdout
+  const maxloc = url.searchParams.has('maxloc') && /^\d+$/.test(url.searchParams.get('maxloc')) ? parseInt(url.searchParams.get('maxloc')) : null;
+
+  if (url.searchParams.get('squashed') != null) {
+  }
+  if (url.searchParams.get('feature') != null) {
+    gitFilterParams += `--all `
+    if (url.searchParams.get('main') == null) {
+      const ref = shell.exec(`cd ${url.searchParams.get('repo')} && cat .git/HEAD`, { silent: true }).stdout
+      const parts = ref.split('/');
+      const mainBranch = parts[parts.length - 1];
+      gitFilterParams += `--not `+mainBranch
+    }
+  }
+
+  
+  const gitlog = shell.exec(`cd ${url.searchParams.get('repo')} && git log --numstat --decorate=full ${gitFilterParams}`, { silent: true }).stdout
   const parsegit = require('parse-git-numstat')
   const commits = parsegit(gitlog)
 
@@ -63,39 +79,46 @@ export default function (req, res, _) {
           return p + n.deleted
         }
       }, 0)
-
-      parsedCommits.push({date: commit.date, stat: [{added: added, deleted: deleted}]})
-
-      if (output.authors[commit.author.email] && output.authors[commit.author.email] != null) {
-        output.authors[commit.author.email].lines.added += added;
-        output.authors[commit.author.email].lines.deleted += deleted;
-
-        output.authors[commit.author.email].details.push([
-          commit.sha,
-          commit.date.toISOString().substring(0, 10),
-          [added, deleted],
-          commit.stat.filter((info) => !(fileExcluded(info["filepath"]))),
-          repo
-        ])
-        output.authors[commit.author.email].commits += 1
+      if (maxloc) {
+        if ((added+deleted) <= maxloc) {
+          parsedCommits.push({date: commit.date, stat: [{added: added, deleted: deleted}]})
+        }
       } else {
-        output.authors[commit.author.email] = {
-          lines: {
-            added: added,
-            deleted: deleted
-          },
-          commits: 1,
-          details: [
-            [
-              commit.sha,
-              commit.date.toISOString().substring(0, 10),
-              [added, deleted],
-              commit.stat.filter((info) => !(fileExcluded(info["filepath"]))),
-              repo
+        parsedCommits.push({date: commit.date, stat: [{added: added, deleted: deleted}]})
+      }
+      if (maxloc === null || (maxloc !== null && (added+deleted) <= maxloc)) {
+        if (output.authors[commit.author.email] && output.authors[commit.author.email] != null) {
+          output.authors[commit.author.email].lines.added += added;
+          output.authors[commit.author.email].lines.deleted += deleted;
+  
+          output.authors[commit.author.email].details.push([
+            commit.sha,
+            commit.date.toISOString().substring(0, 10),
+            [added, deleted],
+            commit.stat.filter((info) => !(fileExcluded(info["filepath"]))),
+            repo
+          ])
+          output.authors[commit.author.email].commits += 1
+        } else {
+          output.authors[commit.author.email] = {
+            lines: {
+              added: added,
+              deleted: deleted
+            },
+            commits: 1,
+            details: [
+              [
+                commit.sha,
+                commit.date.toISOString().substring(0, 10),
+                [added, deleted],
+                commit.stat.filter((info) => !(fileExcluded(info["filepath"]))),
+                repo
+              ]
             ]
-          ]
+          }
         }
       }
+     
     }
   })
   output.commits = parsedCommits.length

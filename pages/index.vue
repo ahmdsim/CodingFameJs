@@ -45,6 +45,22 @@
           </v-btn>
         </router-link>
       </li>
+      <li class="ml-auto">
+        <v-btn text @click.stop="loadGitSyncDialog = true">
+          <v-icon left dark>
+            mdi-sync
+          </v-icon>
+          Git Sync
+        </v-btn>
+        <v-dialog v-model="loadGitSyncDialog" destroy-on-close max-width="780px">
+          <v-card>
+            <v-card-title> Git Sync </v-card-title>
+            <v-card-text>
+              <GitSync :repos="repos" :open="loadGitSyncDialog" />
+            </v-card-text>
+          </v-card>
+        </v-dialog>
+      </li>
     </ul>
     <v-row>
       <!-- Left dashboard menu-->
@@ -59,6 +75,7 @@
                 :repos="repos"
                 @addRepository="addRepository"
                 @removeRepository="removeRepository"
+                @gitDirectoriesFound="gitDirectoriesFound"
               />
             </div>
             <div class="analyze-button">
@@ -115,27 +132,72 @@
           Results
         </h1>
         <!-- Active Filters-->
-        <div class="filters">
+        <div class="filters" @click.stop="dateDialog = true">
           <v-chip
-            class="ma-2"
             color="primary"
             text-color="white"
-            @click.stop="dateDialog = true"
           >
             <v-icon small class="mr-2">
               mdi-calendar-filter
             </v-icon>
             {{ dateRange }}
           </v-chip>
-          <v-dialog v-model="dateDialog" max-width="500px">
-            <v-card>
-              <v-card-title>Change Date</v-card-title>
+          <v-chip
+            v-if="filters.includeSquashed"
+            color="primary"
+            text-color="white"
+          >
+            <v-icon small class="mr-2">
+              mdi-source-branch-remove
+            </v-icon>
+            Squashed commits
+          </v-chip>
+          <v-chip
+            v-if="filters.includeFeatureBranches"
+            color="primary"
+            text-color="white"
+          >
+            <v-icon small class="mr-2">
+              mdi-source-branch
+            </v-icon>
+            Feature branches
+          </v-chip>
+          <v-chip
+            v-if="filters.includeMainBranch"
+            color="primary"
+            text-color="white"
+          >
+            <v-icon small class="mr-2">
+              mdi-git
+            </v-icon>
+            Main Branch
+          </v-chip>
+          <v-chip
+            v-if="filters.maxLoC"
+            color="primary"
+            text-color="white"
+          >
+            <v-icon small class="mr-2">
+              mdi-timeline-text-outline
+            </v-icon>
+            Max Loc: {{ filters.maxLoC }}
+          </v-chip>
+          <v-dialog v-model="dateDialog" max-width="600px">
+            <v-card class="filters">
+              <v-card-title>Filters</v-card-title>
               <v-card-text>
+                <strong class="d-block mb-4">Date Range:</strong>
                 <DatePicker
                   :date-prop="date"
                   :date-range="dateRange"
                   @changeDate="onChangeDate"
                 />
+                <strong class="d-block mt-4 mb-4">Git Branches:</strong>
+                <v-checkbox v-model="filters.includeSquashed" label="Include Squashed commits (Not implemented)" />
+                <v-checkbox v-model="filters.includeFeatureBranches" label="Include all feature branches" />
+                <v-checkbox v-model="filters.includeMainBranch" label="Include main branch" />
+                <strong class="d-block mt-4 mb-4">Exclude:</strong>
+                <v-text-field v-model="filters.maxLoC" label="File with max number of LoC" />
               </v-card-text>
               <v-card-actions class="pb-5">
                 <v-btn color="primary" elevation="2" @click="dateDialog = false">
@@ -177,166 +239,169 @@
                       v-for="(repo, index) in repos"
                       :key="index"
                     >
-                    <h3 style="text-align: center;">{{ repo.path }}</h3>
-                    <v-tabs-items v-model="tab">
-                  <v-tab-item style="height: 370px !important;">
-                    <v-card flat class="commit-chart-window">
-                      <div style="height: 300px !important;">
-                        <commits-and-code-chart
-                          :path="repo.path"
-                          :rawData="rawData"
-                          :dates="date"
-                          @stopSpiner="isSpiner = false"
-                        />
-                        <div v-if="isSpiner" class="chart-spiner">
-                          <v-progress-circular
-                            :size="70"
-                            :width="7"
-                            color="primary"
-                            indeterminate
-                          />
-                        </div>
-                      </div>
-                      <div style="margin-top: auto !important;margin-bottom: 0px; !important">
-                        <DateChanger
-                          :date="date"
-                          :date-range="dateRange"
-                          @changeDate="onChangeDate"
-                          @analize="analize"
-                        />
-                      </div>
-                    </v-card>
-                  </v-tab-item>
-                  <v-tab-item>
-                    <v-card flat>
-                      <div
-                        v-if="mainPieData[repo.path] && mainPieData[repo.path].length < 2"
-                        class="extensionsChart"
-                      >
-                        <div>
-                          <v-progress-circular
-                            :size="70"
-                            :width="7"
-                            color="primary"
-                            indeterminate
-                          />
-                        </div>
-                      </div>
-                      <FileExtensionsChart
-                        v-else
-                        :pieData="mainPieData[repo.path]"
-                        :status="statusRepos[repo.path]"
-                        @stopSpinerExtensions="isSpinerExtensions = false"
-                      />
-                      <template>
-                        <div>
-                          <v-alert
-                            v-model="alert"
-                            border="left"
-                            close-text="Close Alert"
-                            color="primary"
-                            dark
-                          >
-                            <v-row>
-                              <v-col cols="10">
-                                Are you sure you want to analize this repo without
-                                any ignored files? It may cause to unlimited
-                                calculations that will not end
-                              </v-col>
-                              <v-col cols="2">
-                                <v-btn @click="useExtensionsManager(repo)">
-                                  Anyway analize
+                      <h3 style="text-align: center;">
+                        {{ repo.path }}
+                      </h3>
+                      <v-tabs-items v-model="tab">
+                        <v-tab-item style="height: 370px !important;">
+                          <v-card flat class="commit-chart-window">
+                            <div style="height: 300px !important;">
+                              <commits-and-code-chart
+                                :path="repo.path"
+                                :rawData="rawData"
+                                :dates="date"
+                                @stopSpiner="isSpiner = false"
+                              />
+                              <div v-if="isSpiner" class="chart-spiner">
+                                <v-progress-circular
+                                  :size="70"
+                                  :width="7"
+                                  color="primary"
+                                  indeterminate
+                                />
+                              </div>
+                            </div>
+                            <div style="margin-top: auto !important;margin-bottom: 0px; !important">
+                              <DateChanger
+                                :date="date"
+                                :date-range="dateRange"
+                                @changeDate="onChangeDate"
+                                @analize="analize"
+                              />
+                            </div>
+                          </v-card>
+                        </v-tab-item>
+                        <v-tab-item>
+                          <v-card flat>
+                            <div
+                              v-if="mainPieData[repo.path] && mainPieData[repo.path].length < 2"
+                              class="extensionsChart"
+                            >
+                              <div>
+                                <v-progress-circular
+                                  :size="70"
+                                  :width="7"
+                                  color="primary"
+                                  indeterminate
+                                />
+                              </div>
+                            </div>
+                            <FileExtensionsChart
+                              v-else
+                              :pieData="mainPieData[repo.path]"
+                              :status="statusRepos[repo.path]"
+                              @stopSpinerExtensions="isSpinerExtensions = false"
+                            />
+                            <template>
+                              <div>
+                                <v-alert
+                                  v-model="alert"
+                                  border="left"
+                                  close-text="Close Alert"
+                                  color="primary"
+                                  dark
+                                >
+                                  <v-row>
+                                    <v-col cols="10">
+                                      Are you sure you want to analize this repo without
+                                      any ignored files? It may cause to unlimited
+                                      calculations that will not end
+                                    </v-col>
+                                    <v-col cols="2">
+                                      <v-btn @click="useExtensionsManager(repo)">
+                                        Anyway analize
+                                      </v-btn>
+                                    </v-col>
+                                  </v-row>
+                                </v-alert>
+                                <v-btn v-if="!alert || statusRepos[repo.path] == 'failed'" @click="useExtensionsManager(repo)">
+                                  Make analysis
                                 </v-btn>
-                              </v-col>
-                            </v-row>
-                          </v-alert>
-                          <v-btn v-if="!alert || statusRepos[repo.path] == 'failed'" @click="useExtensionsManager(repo)">
-                            Make analysis
-                          </v-btn>
-                        </div>
-                      </template>
-                    </v-card>
-                  </v-tab-item>
-                  <v-tab-item v-if="isImpact">
-                    <v-card flat>
-                      <ImpactCharts
-                        :pieDatas="pieDatas[repo.path]"
-                        :personalImpact="personalImpact[repo.path]"
-                        :extensions="mainPieData[repo.path]"
-                      />
-                    </v-card>
-                  </v-tab-item>
-                  <v-tab-item v-if="isPersistence">
-                    <v-card flat>
-                      <PersistenceChart @persistenceData="changePersistenceData" />
-                    </v-card>
-                  </v-tab-item>
-                </v-tabs-items>
+                              </div>
+                            </template>
+                          </v-card>
+                        </v-tab-item>
+                        <v-tab-item v-if="isImpact">
+                          <v-card flat>
+                            <ImpactCharts
+                              :pieDatas="pieDatas[repo.path]"
+                              :personalImpact="personalImpact[repo.path]"
+                              :extensions="mainPieData[repo.path]"
+                            />
+                          </v-card>
+                        </v-tab-item>
+                        <v-tab-item v-if="isPersistence">
+                          <v-card flat>
+                            <PersistenceChart @persistenceData="changePersistenceData" />
+                          </v-card>
+                        </v-tab-item>
+                      </v-tabs-items>
                     </v-window-item>
-                    <v-window-item
-                    >
-                    <h3 style="text-align: center;">All repos</h3>
-                    <v-tabs-items v-model="tab">
-                  <v-tab-item>
-                    <v-card flat class="commit-chart-window">
-                      <div style="height: 300px !important;">
-                        <commits-and-code-chart
-                          :path="'all'"
-                          :rawData="rawData"
-                          :dates="date"
-                          @stopSpiner="isSpiner = false"
-                        />
-                        <div v-if="isSpiner" class="chart-spiner">
-                          <v-progress-circular
-                            :size="70"
-                            :width="7"
-                            color="primary"
-                            indeterminate
-                          />
-                        </div>
-                      </div>
-                      <div style="margin-top: auto !important;margin-bottom: 0px; !important">
-                        <DateChanger
-                          :date="date"
-                          :date-range="dateRange"
-                          @changeDate="onChangeDate"
-                          @analize="analize"
-                        />
-                      </div>
-                    </v-card>
-                  </v-tab-item>
-                  <v-tab-item>
-                    <v-card flat>
-                      <FileExtensionsChart
-                        v-if="!isSpinerExtensions"
-                        :pieData='mainPieDataAll'
-                        @stopSpinerExtensions="isSpinerExtensions = false"
-                      />
-                      <div v-if="isSpinerExtensions" class="chart-spiner">
-                        <v-progress-circular
-                          :size="70"
-                          :width="7"
-                          color="primary"
-                          indeterminate
-                        />
-                      </div>
-                    </v-card>
-                  </v-tab-item>
-                  <v-tab-item v-if="isImpact">
-                    <v-card flat>
-                      <ImpactCharts
-                        :status="success"
-                        :pieDatas="pieDatasAll"
-                        :personalImpact="personalImpactAll"
-                      />
-                    </v-card>
-                  </v-tab-item>
-                  <v-tab-item v-if="isPersistence">
-                    <v-card flat>
-                      <PersistenceChart @persistenceData="changePersistenceData" />
-                    </v-card>
-                  </v-tab-item>
-                </v-tabs-items>
+                    <v-window-item>
+                      <h3 style="text-align: center;">
+                        All repos
+                      </h3>
+                      <v-tabs-items v-model="tab">
+                        <v-tab-item>
+                          <v-card flat class="commit-chart-window">
+                            <div style="height: 300px !important;">
+                              <commits-and-code-chart
+                                :path="'all'"
+                                :rawData="rawData"
+                                :dates="date"
+                                @stopSpiner="isSpiner = false"
+                              />
+                              <div v-if="isSpiner" class="chart-spiner">
+                                <v-progress-circular
+                                  :size="70"
+                                  :width="7"
+                                  color="primary"
+                                  indeterminate
+                                />
+                              </div>
+                            </div>
+                            <div style="margin-top: auto !important;margin-bottom: 0px; !important">
+                              <DateChanger
+                                :date="date"
+                                :date-range="dateRange"
+                                @changeDate="onChangeDate"
+                                @analize="analize"
+                              />
+                            </div>
+                          </v-card>
+                        </v-tab-item>
+                        <v-tab-item>
+                          <v-card flat>
+                            <FileExtensionsChart
+                              v-if="!isSpinerExtensions"
+                              :pieData="mainPieDataAll"
+                              @stopSpinerExtensions="isSpinerExtensions = false"
+                            />
+                            <div v-if="isSpinerExtensions" class="chart-spiner">
+                              <v-progress-circular
+                                :size="70"
+                                :width="7"
+                                color="primary"
+                                indeterminate
+                              />
+                            </div>
+                          </v-card>
+                        </v-tab-item>
+                        <v-tab-item v-if="isImpact">
+                          <v-card flat>
+                            <ImpactCharts
+                              :status="success"
+                              :pieDatas="pieDatasAll"
+                              :personalImpact="personalImpactAll"
+                            />
+                          </v-card>
+                        </v-tab-item>
+                        <v-tab-item v-if="isPersistence">
+                          <v-card flat>
+                            <PersistenceChart @persistenceData="changePersistenceData" />
+                          </v-card>
+                        </v-tab-item>
+                      </v-tabs-items>
                     </v-window-item>
                   </v-window>
                 </template>
@@ -378,6 +443,7 @@ import AnalysisList from "../components/AnalysisList.vue";
 import ImpactCharts from "../components/ImpactCharts.vue";
 import PersistenceChart from "../components/PersistenceChart.vue";
 import GeneralInfo from "../components/GeneralInfo.vue";
+import GitSync from "../components/GitSync.vue";
 
 export default {
   components: {
@@ -397,6 +463,7 @@ export default {
     ImpactCharts,
     PersistenceChart,
     GeneralInfo,
+    GitSync,
   },
   data: () => ({
     filePreview: "",
@@ -428,12 +495,19 @@ export default {
     isPersistence: false,
     alert: true,
     loadConfigurationDialog: false,
+    loadGitSyncDialog: false,
     dateDialog: false,
     window: 0,
     pieDataRepos: {},
     mainPieDatasRepos: {},
     personalImpactRepos: {},
     statusRepos: {},
+    filters: {
+      includeSquashed: false,
+      includeFeatureBranches: false,
+      includeMainBranch: true,
+      maxLoC: 0
+    }
   }),
   computed: {
     selectedIgnoredFiles: function () {
@@ -619,6 +693,16 @@ export default {
     removeRepository: function (index) {
       this.repos.splice(index.index, 1);
     },
+    gitDirectoriesFound: function(evt) {
+      this.repos.splice(evt.index, 1);
+      console.log(this.repos, evt.repos);
+      for (const repoPath of evt.repos) {
+        const existingRepo = this.repos.find((repo) => repo.path === repoPath);
+        if (!existingRepo) {
+          this.repos.push(new Repository(repoPath, [], [], 0, 0));
+        }
+      }
+    },
     reloadAnalysesStorage: function () {
       if (process.client) {
         this.storedAnalyses = [];
@@ -651,12 +735,25 @@ export default {
         if (repository.ignoredFiles.length > 0) {
           ignore = "&ignore=" + escape(repository.ignoredFiles.join(","));
         }
+        let filter = "";
+        if(this.filters.includeSquashed) {
+          filter += "&squashed=1";
+        }
+        if(this.filters.includeFeatureBranches) {
+          filter += "&feature=1";
+        }
+        if(this.filters.includeMainBranch) {
+          filter += "&main=1";
+        }
+        if(this.filters.maxLoC) {
+          filter += "&maxloc="+this.filters.maxLoC;
+        }
         const gitlog = await this.$axios.$get(
-          `/gitlog?repo=${escape(repository.path)}${dates}${ignore}`
+          `/gitlog?repo=${escape(repository.path)}${dates}${ignore}${filter}`
         );
 
         const rawData = await this.$axios.$get(
-          `/gitlog?repo=${escape(repository.path)}${dates}${ignore}&raw=true`
+          `/gitlog?repo=${escape(repository.path)}${dates}${ignore}${filter}&raw=true`
         );
 
         analysis.rawData.push(rawData);
