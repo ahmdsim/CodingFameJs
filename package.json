@@ -8,7 +8,8 @@
     "start": "nuxt start",
     "generate": "nuxt generate",
     "lint:js": "eslint --fix --ext \".js,.vue\" --ignore-path .gitignore .",
-    "lint": "npm run lint:js"
+    "lint": "npm run lint:js",
+    "logSync": "node worker.js"
   },
   "browser": {
     "child_process": false,
@@ -19,6 +20,8 @@
     "@nuxtjs/axios": "^5.13.6",
     "@nuxtjs/pwa": "^3.3.5",
     "blamejs": "^1.0.0",
+    "bluebird": "^3.7.2",
+    "body-parser": "^1.20.2",
     "bull": "^4.10.2",
     "child_process": "^1.0.2",
     "core-js": "^3.15.1",
@@ -30,6 +33,7 @@
     "glob": "^7.2.0",
     "h3": "^0.3.9",
     "minimatch": "^3.0.4",
+    "mongoose": "^8.2.0",
     "normalize-path": "^3.0.0",
     "nuxt": "^2.15.7",
     "object-hash": "^3.0.0",

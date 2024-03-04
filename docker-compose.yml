@@ -31,6 +31,14 @@ services:
     - ALLOW_EMPTY_PASSWORD=yes
     networks:
     - nuxt-network
+  mongodb:
+    image: mongo:3.6
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: sysadmin
+      MONGO_INITDB_ROOT_PASSWORD: sysadmin
+    ports:
+      - "27017:27017"
 
 networks:
   nuxt-network:
